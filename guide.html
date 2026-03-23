@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ElektroHub – Anleitung</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      background: var(--gray-50);
+      margin: 0;
+      padding: 0;
+    }
+    .guide-wrapper {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 24px 20px 60px 20px;
+    }
+    .guide-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 0 20px 0;
+      border-bottom: 1px solid var(--gray-200);
+      margin-bottom: 24px;
+    }
+    .guide-header h1 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--gray-900);
+    }
+    .guide-header span {
+      font-size: 0.85rem;
+      color: var(--gray-400);
+    }
+  </style>
+</head>
+<body>
+  <div class="guide-wrapper">
+
+    <div class="guide-header">
+      <h1>⚡ ElektroHub – Anleitung</h1>
+      <span>Dieses Fenster neben die App legen und mitlesen</span>
+    </div>
+
+    <div style="margin-bottom:16px;">
+      <input type="text" class="search-input" placeholder="Suchen... z.B. Mahnung, Skonto, AGB, Kalkulation" id="guide-search" oninput="filterGuide()" style="width:100%;padding:10px 14px;border:1px solid var(--gray-300);border-radius:8px;font-size:0.95rem;">
+    </div>
+    <div id="guide-no-result" style="display:none;text-align:center;padding:40px;color:var(--gray-400);">Kein Abschnitt gefunden.</div>
+
+    <!-- Schnellstart -->
+    <div class="card guide-section" data-keywords="schnellstart anfangen einrichten firmendaten logo kunde projekt kalkulation angebot rechnung">
+      <h3 class="mb-16">Schnellstart – In 5 Minuten loslegen</h3>
+
+      <div class="guide-step">
+        <div class="guide-step-number">1</div>
+        <div class="guide-step-content">
+          <h4>Firmendaten einrichten</h4>
+          <div class="guide-nav-badge">⚙️ Einstellungen → Abschnitt 2: <strong>Firmenstammdaten</strong></div>
+          <p>Trage Firmennamen, Adresse, Telefon, E-Mail und Steuernummer ein. Diese Daten erscheinen auf all deinen Dokumenten.</p>
+          <div class="guide-tip">Tipp: Lade auch dein Firmenlogo hoch (Abschnitt 1) – es erscheint oben rechts auf jedem Beleg.</div>
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="guide-step-number">2</div>
+        <div class="guide-step-content">
+          <h4>Bankverbindung eintragen</h4>
+          <div class="guide-nav-badge">⚙️ Einstellungen → Abschnitt 3: <strong>Bankverbindung</strong></div>
+          <p>Trage deine IBAN ein. Dann wird auf jeder Rechnung automatisch ein <strong>QR-Code</strong> erzeugt, den dein Kunde mit seiner Banking-App scannen kann.</p>
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="guide-step-number">3</div>
+        <div class="guide-step-content">
+          <h4>Ersten Kunden anlegen</h4>
+          <div class="guide-nav-badge">👥 Kunden → <strong>+ Neuer Kunde</strong></div>
+          <p>Klick in der Seitenleiste auf <strong>Kunden</strong>, dann oben rechts auf <strong>+ Neuer Kunde</strong>. Trag Name, Adresse und Kontaktdaten ein. Wähl den Typ (Privat, Gewerbe, Hausverwaltung oder Bauträger).</p>
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="guide-step-number">4</div>
+        <div class="guide-step-content">
+          <h4>Projekt anlegen</h4>
+          <div class="guide-nav-badge">📋 Projekte → <strong>+ Neues Projekt</strong></div>
+          <p>Klick in der Seitenleiste auf <strong>Projekte</strong>, dann oben rechts auf <strong>+ Neues Projekt</strong>. Gib dem Projekt einen Namen (z.B. „Elektroinstallation Neubau Müller"), wähl den Kunden aus und trag die Baustellen-Adresse ein.</p>
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="guide-step-number">5</div>
+        <div class="guide-step-content">
+          <h4>Kalkulation erstellen</h4>
+          <div class="guide-nav-badge">📋 Projekte → Projekt anklicken → <strong>+ Neue Kalkulation</strong></div>
+          <p>Öffne das Projekt und klick auf <strong>+ Neue Kalkulation</strong>. Füge Positionen hinzu – entweder manuell oder über den <strong>📋 Textbaustein</strong>-Button. Dort findest du vorgefertigte Leistungstexte für typische Elektroarbeiten.</p>
+          <div class="guide-tip">Tipp: Wähle pro Position den richtigen Typ (Material, Eigenleistung Std., Pauschale, Nebenkosten). So kann ElektroHub Marge und Arbeitskosten richtig berechnen.</div>
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="guide-step-number">6</div>
+        <div class="guide-step-content">
+          <h4>Angebot erstellen & versenden</h4>
+          <div class="guide-nav-badge">📋 Projekte → Projekt → Kalkulation → <strong>📄 Beleg</strong></div>
+          <p>In der Kalkulation klickst du auf den <strong>📄 Beleg</strong>-Button. Es wird automatisch ein Angebot mit allen Positionen erstellt.</p>
+          <div class="guide-nav-badge">📄 Belege → Angebot anklicken → <strong>📄 PDF</strong> oder <strong>📧 E-Mail-Text</strong></div>
+          <p>Du kannst es als PDF drucken/speichern oder den vorformulierten E-Mail-Text in die Zwischenablage kopieren.</p>
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="guide-step-number">7</div>
+        <div class="guide-step-content">
+          <h4>Angebot in Rechnung umwandeln</h4>
+          <div class="guide-nav-badge">📄 Belege → Angebot anklicken → <strong>→ Rechnung</strong></div>
+          <p>Wenn der Kunde zustimmt, öffne das Angebot und klick <strong>→ Rechnung</strong>. Es wird eine neue Rechnung mit eigener Nummer erstellt. Das Angebot bleibt erhalten.</p>
+          <div class="guide-tip">Tipp: Du kannst auch zuerst eine Auftragsbestätigung (→ Auftragsbestätigung) und dann erst die Rechnung erstellen.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Typischer Ablauf -->
+    <div class="card guide-section" data-keywords="ablauf projekt workflow anfrage kalkulation angebot beauftragt arbeit abnahme rechnung status material entnahme">
+      <h3 class="mb-16">Typischer Ablauf eines Projekts</h3>
+
+      <!-- Visueller Workflow -->
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid var(--gray-200);">
+        <span class="badge status-anfrage" style="font-size:0.85rem;padding:5px 12px;">1. Anfrage</span>
+        <span style="color:var(--gray-400);">→</span>
+        <span class="badge status-kalkulation" style="font-size:0.85rem;padding:5px 12px;">2. Kalkulation</span>
+        <span style="color:var(--gray-400);">→</span>
+        <span class="badge badge-blue" style="font-size:0.85rem;padding:5px 12px;">3. Angebot</span>
+        <span style="color:var(--gray-400);">→</span>
+        <span class="badge status-beauftragt" style="font-size:0.85rem;padding:5px 12px;">4. Beauftragt</span>
+        <span style="color:var(--gray-400);">→</span>
+        <span class="badge status-in-arbeit" style="font-size:0.85rem;padding:5px 12px;">5. Arbeit</span>
+        <span style="color:var(--gray-400);">→</span>
+        <span class="badge status-abnahme" style="font-size:0.85rem;padding:5px 12px;">6. Abnahme</span>
+        <span style="color:var(--gray-400);">→</span>
+        <span class="badge badge-green" style="font-size:0.85rem;padding:5px 12px;">7. Rechnung</span>
+        <span style="color:var(--gray-400);">→</span>
+        <span class="badge status-abgeschlossen" style="font-size:0.85rem;padding:5px 12px;">8. Fertig</span>
+      </div>
+
+      <!-- Schritt-für-Schritt -->
+      <div class="guide-step">
+        <div class="guide-step-number">1</div>
+        <div class="guide-step-content">
+          <h4>Anfrage kommt rein</h4>
+          <div class="guide-nav-badge">👥 Kunden → <strong>+ Neuer Kunde</strong></div>
+          <p>Leg den Kunden an (Name, Adresse, Telefon, Typ).</p>
+          <div class="guide-nav-badge">📋 Projekte → <strong>+ Neues Projekt</strong></div>
+          <p>Erstelle ein Projekt, wähle den Kunden aus, trag die Baustellen-Adresse ein. Status bleibt auf <strong>Anfrage</strong>.</p>
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="guide-step-number">2</div>
+        <div class="guide-step-content">
+          <h4>Kalkulation erstellen</h4>
+          <div class="guide-nav-badge">📋 Projekte → Projekt anklicken → <strong>+ Neue Kalkulation</strong></div>
+          <p>Klick in der Projekt-Detailseite auf <strong>+ Neue Kalkulation</strong>. Es öffnet sich ein Formular:</p>
+          <ul style="margin:8px 0 0 20px;color:var(--gray-600);font-size:0.9rem;line-height:1.8;">
+            <li>Gib einen Namen ein (z.B. „Hauptkalkulation")</li>
+            <li>Füge Positionen hinzu: Wähle den <strong>Typ</strong> (Material / Eigenleistung Std. / Pauschale / Nebenkosten)</li>
+            <li>Oder klick <strong>📋 Textbaustein</strong> – dort findest du fertige Leistungstexte wie „Steckdose setzen"</li>
+            <li>Trag <strong>Menge</strong> und <strong>Einzelpreis</strong> ein – die Summe berechnet sich automatisch</li>
+            <li>Klick <strong>Anlegen</strong></li>
+          </ul>
+          <p class="mt-8">Dann stell den Projekt-Status auf <strong>Kalkulation</strong> um (Dropdown in der Projekt-Detailseite).</p>
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="guide-step-number">3</div>
+        <div class="guide-step-content">
+          <h4>Angebot erstellen & versenden</h4>
+          <div class="guide-nav-badge">📋 Projekte → Projekt → Kalkulation → <strong>📄 Beleg</strong></div>
+          <p>In der Kalkulation klickst du auf den <strong>📄 Beleg</strong>-Button. Es wird ein Angebot mit allen Positionen und Kundendaten erstellt.</p>
+          <div class="guide-nav-badge">📄 Belege → Angebot anklicken</div>
+          <p>In der Beleg-Detailansicht:</p>
+          <ul style="margin:8px 0 0 20px;color:var(--gray-600);font-size:0.9rem;line-height:1.8;">
+            <li><strong>📄 PDF</strong> – Druckansicht öffnen und als PDF speichern</li>
+            <li><strong>📧 E-Mail-Text</strong> – Vorformuliert in die Zwischenablage kopieren</li>
+            <li>Status auf <strong>Gesendet</strong> setzen</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="guide-step-number">4</div>
+        <div class="guide-step-content">
+          <h4>Kunde sagt zu → Auftrag</h4>
+          <div class="guide-nav-badge">📄 Belege → Angebot anklicken → <strong>→ Auftragsbestätigung</strong></div>
+          <p>Optional: Erstelle eine Auftragsbestätigung aus dem Angebot (Button oben rechts).</p>
+          <div class="guide-nav-badge">📋 Projekte → Projekt → Status: <strong>Beauftragt</strong></div>
+          <p>Stell den Projekt-Status auf <strong>Beauftragt</strong> um.</p>
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="guide-step-number">5</div>
+        <div class="guide-step-content">
+          <h4>Arbeit durchführen</h4>
+          <div class="guide-nav-badge">📋 Projekte → Projekt → Status: <strong>In Arbeit</strong></div>
+          <p>Stell den Status auf <strong>In Arbeit</strong>.</p>
+          <div class="guide-nav-badge">📦 Lager → Artikel anklicken → <strong>📤 Entnahme</strong></div>
+          <p>Wenn du Material aus dem Lager nimmst: Geh zu <strong>Lager</strong>, wähle den Artikel und buche eine <strong>Entnahme</strong>. Ordne sie dem Projekt zu – dann siehst du später im Projekt, welches Material verbraucht wurde.</p>
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="guide-step-number">6</div>
+        <div class="guide-step-content">
+          <h4>Abnahme</h4>
+          <div class="guide-nav-badge">📋 Projekte → Projekt → Status: <strong>Abnahme</strong></div>
+          <p>Stell den Status auf <strong>Abnahme</strong>.</p>
+          <div class="guide-nav-badge">📄 Belege → <strong>+ Neuer Beleg</strong> → Typ: <strong>Abnahmeprotokoll</strong></div>
+          <p>Optional: Erstelle ein Abnahmeprotokoll (enthält Unterschriftsfelder).</p>
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="guide-step-number">7</div>
+        <div class="guide-step-content">
+          <h4>Rechnung stellen</h4>
+          <div class="guide-nav-badge">📄 Belege → Angebot anklicken → <strong>→ Rechnung</strong></div>
+          <p>Öffne das Angebot und klick auf <strong>→ Rechnung</strong>. Es wird eine neue Rechnung mit eigener Nummer, Fälligkeitsdatum und QR-Code erstellt.</p>
+          <p class="mt-8">Dann: <strong>📄 PDF</strong> exportieren und versenden. Status auf <strong>Gesendet</strong>.</p>
+          <div class="guide-tip">Tipp: Bei größeren Projekten kannst du vorher <strong>Abschlagsrechnungen</strong> stellen und am Ende eine <strong>Schlussrechnung</strong>.</div>
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="guide-step-number">8</div>
+        <div class="guide-step-content">
+          <h4>Zahlung erhalten & abschließen</h4>
+          <div class="guide-nav-badge">📄 Belege → Rechnung anklicken → Status: <strong>Bezahlt</strong></div>
+          <p>Wenn die Zahlung eingegangen ist, stell den Rechnungs-Status auf <strong>Bezahlt</strong>.</p>
+          <div class="guide-nav-badge">📋 Projekte → Projekt → Status: <strong>Abgeschlossen</strong></div>
+          <p>Stell den Projekt-Status auf <strong>Abgeschlossen</strong>. Das Projekt verschwindet vom Dashboard.</p>
+          <div class="guide-tip">Unter <strong>📊 Statistiken → Projekt-Auswertung</strong> kannst du den Soll/Ist-Vergleich sehen.</div>
+        </div>
+      </div>
+
+      <!-- Kunde zahlt nicht -->
+      <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--gray-200);">
+        <h4 class="mb-8">Was wenn der Kunde nicht zahlt?</h4>
+        <div class="guide-nav-badge">📄 Belege → Rechnung anklicken → <strong>→ Mahnung</strong></div>
+        <p style="color:var(--gray-600);font-size:0.9rem;line-height:1.6;">Klick auf <strong>→ Mahnung</strong>. ElektroHub erkennt automatisch, ob es die 1., 2. oder letzte Mahnung ist. Jede Mahnstufe hat einen eigenen Vorlagentext.</p>
+      </div>
+    </div>
+
+    <!-- Funktionen -->
+    <div class="card guide-section" data-keywords="funktionen dokumenttypen textbausteine lager statistiken qr code einstellungen kleinunternehmer skonto handwerkerbonus">
+      <h3 class="mb-16">Funktionen im Detail</h3>
+
+      <div class="guide-step">
+        <div class="guide-step-number">📄</div>
+        <div class="guide-step-content">
+          <h4>14 Dokumenttypen</h4>
+          <p>Angebot, Auftragsbestätigung, Rechnung, Abschlagsrechnung, Schlussrechnung, Stornorechnung, Gutschrift, Lieferschein, Kostenvoranschlag, Abnahmeprotokoll, Zahlungserinnerung, 2. Mahnung, Letzte Mahnung, Invoice (EN).</p>
+          <div class="guide-nav-badge">⚙️ Einstellungen → Abschnitt 7: <strong>Dokumentvorlagen</strong></div>
+          <p class="mt-8">Jeder Typ hat eigene Vorlagentexte (Einleitung, Schlusstext, E-Mail). Du kannst sie dort anpassen.</p>
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="guide-step-number">📋</div>
+        <div class="guide-step-content">
+          <h4>Textbausteine</h4>
+          <p>Über 40 vorgefertigte Leistungsbeschreibungen in 6 Kategorien. Du erreichst sie beim Erstellen von Kalkulationen oder Belegen über den <strong>📋 Textbaustein</strong>-Button.</p>
+          <div class="guide-nav-badge">⚙️ Einstellungen → Abschnitt 8: <strong>Textbausteine verwalten</strong></div>
+          <p class="mt-8">Eigene Textbausteine anlegen, bearbeiten oder löschen.</p>
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="guide-step-number">📊</div>
+        <div class="guide-step-content">
+          <h4>Statistiken</h4>
+          <div class="guide-nav-badge">📊 Statistiken (in der Seitenleiste)</div>
+          <p>5 Auswertungen: Jahresübersicht, Umsatzverteilung, Projekt-Auswertung, Offene Posten, Lager-Auswertung.</p>
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="guide-step-number">⚙️</div>
+        <div class="guide-step-content">
+          <h4>Wichtige Einstellungen</h4>
+          <div class="guide-nav-badge">⚙️ Einstellungen → Abschnitt 5: <strong>Dokumenteinstellungen</strong></div>
+          <ul style="margin:4px 0 0 20px;color:var(--gray-600);font-size:0.9rem;line-height:1.8;">
+            <li><strong>Kleinunternehmer (§19 UStG)</strong> – keine MwSt. auf Belegen</li>
+            <li><strong>Skonto</strong> – Prozentsatz und Frist einstellen</li>
+            <li><strong>Handwerkerbonus</strong> – Arbeitskosten-Anteil anzeigen</li>
+            <li><strong>Nummernkreise</strong> – Prefixe konfigurieren (z.B. RE-, AG-)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rechnungen & Mahnungen -->
+    <div class="card guide-section" data-keywords="rechnung zahlung mahnung zahlungserinnerung inkasso überfällig fällig bezahlt offen gesendet automatisch dashboard mahnprozess">
+      <h3 class="mb-16">Rechnungen, Zahlungen & Mahnungen</h3>
+
+      <p style="color:var(--gray-600);font-size:0.9rem;line-height:1.6;margin-bottom:16px;">
+        So läuft der gesamte Zahlungsprozess – von der Rechnung bis zur letzten Mahnung.
+      </p>
+
+      <div class="guide-step">
+        <div class="guide-step-number">1</div>
+        <div class="guide-step-content">
+          <h4>Rechnung erstellen</h4>
+          <div class="guide-nav-badge">📄 Belege → Angebot anklicken → <strong>→ Rechnung</strong></div>
+          <p>Fälligkeitsdatum wird automatisch gesetzt (Rechnungsdatum + Zahlungsziel). Status: <strong>Entwurf</strong>.</p>
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="guide-step-number">2</div>
+        <div class="guide-step-content">
+          <h4>Rechnung versenden</h4>
+          <div class="guide-nav-badge">📄 Belege → Rechnung → <strong>📄 PDF</strong> + <strong>📧 E-Mail-Text</strong></div>
+          <p>PDF exportieren, per Mail verschicken, Status auf <strong>Gesendet</strong> setzen.</p>
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="guide-step-number">3</div>
+        <div class="guide-step-content">
+          <h4>Warten auf Zahlung (automatisch)</h4>
+          <div class="guide-nav-badge">🏠 Dashboard → Aufgaben & Hinweise</div>
+          <p>Das Dashboard warnt dich automatisch:</p>
+          <ul style="margin:8px 0 0 20px;color:var(--gray-600);font-size:0.88rem;line-height:1.8;">
+            <li><strong>3 Tage vorher:</strong> <em>„RE-2026-0001 – in 3 Tagen fällig!"</em></li>
+            <li><strong>Am Tag:</strong> <em>„HEUTE fällig!"</em></li>
+            <li><strong>Danach:</strong> Status wird automatisch <strong>Überfällig</strong></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="guide-step-number">4</div>
+        <div class="guide-step-content">
+          <h4>Mahnungen (per Klick vom Dashboard)</h4>
+          <p>Das Dashboard schlägt dir die nächste Mahnstufe vor:</p>
+          <div style="margin:8px 0;padding:12px;background:var(--gray-50);border-radius:8px;font-size:0.88rem;">
+            <div style="padding:6px 0;border-bottom:1px solid var(--gray-200);">
+              <span class="badge badge-yellow" style="min-width:80px;text-align:center;">1–7 Tage</span>
+              <strong>Zahlungserinnerung</strong> – freundlicher Ton
+            </div>
+            <div style="padding:6px 0;border-bottom:1px solid var(--gray-200);">
+              <span class="badge badge-yellow" style="min-width:80px;text-align:center;">+ 7 Tage</span>
+              <strong>2. Mahnung</strong> – dringender
+            </div>
+            <div style="padding:6px 0;border-bottom:1px solid var(--gray-200);">
+              <span class="badge badge-red" style="min-width:80px;text-align:center;">+ 7 Tage</span>
+              <strong>Letzte Mahnung</strong> – mit Inkasso-Androhung
+            </div>
+            <div style="padding:6px 0;">
+              <span class="badge badge-red" style="min-width:80px;text-align:center;">+ 14 Tage</span>
+              <strong>Inkasso/Anwalt</strong> – Erinnerung
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="guide-step-number">5</div>
+        <div class="guide-step-content">
+          <h4>Bezahlt</h4>
+          <div class="guide-nav-badge">📄 Belege → Rechnung → Status: <strong>Bezahlt</strong></div>
+          <p>Wenn das Geld da ist → Status auf <strong>Bezahlt</strong>.</p>
+        </div>
+      </div>
+
+      <div style="margin-top:16px;padding:16px;background:var(--gray-50);border-radius:8px;">
+        <h4 class="mb-8" style="font-size:0.95rem;">Automatisch vs. Manuell</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:0.85rem;">
+          <div>
+            <div style="font-weight:600;color:#10b981;margin-bottom:4px;">Automatisch:</div>
+            <ul style="margin:0 0 0 14px;color:var(--gray-600);line-height:1.7;">
+              <li>Fälligkeit berechnen</li>
+              <li>Überfällig markieren</li>
+              <li>Dashboard-Warnungen</li>
+              <li>Mahnstufe erkennen</li>
+              <li>Vorlagentexte</li>
+            </ul>
+          </div>
+          <div>
+            <div style="font-weight:600;color:#2563eb;margin-bottom:4px;">Machst du:</div>
+            <ul style="margin:0 0 0 14px;color:var(--gray-600);line-height:1.7;">
+              <li>„Gesendet" setzen</li>
+              <li>Mahnung-Button klicken</li>
+              <li>Mahnung versenden</li>
+              <li>„Bezahlt" setzen</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Skonto -->
+    <div class="card guide-section" data-keywords="skonto rabatt zahlung schnell prozent frist konditionen zahlungsbedingungen">
+      <h3 class="mb-16">Skonto – Rabatt für schnelle Zahlung</h3>
+      <p style="color:var(--gray-600);font-size:0.88rem;line-height:1.6;margin-bottom:12px;">
+        Skonto = Rabatt wenn der Kunde schnell zahlt. Kein Vertrag – ein freiwilliges Angebot von dir.
+      </p>
+      <div class="guide-step">
+        <div class="guide-step-number">1</div>
+        <div class="guide-step-content">
+          <h4>Skonto vergeben</h4>
+          <div class="guide-nav-badge">📄 Belege → Beleg anklicken → <strong>Skonto vergeben</strong></div>
+          <p>Prozentsatz und Frist wählen (z.B. 2% / 10 Tage). Auf der Rechnung erscheint dann:</p>
+          <div style="margin:8px 0;padding:10px 14px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:6px;font-size:0.85rem;line-height:1.6;">
+            Zahlbar bis zum <strong>15.04.2026</strong> ohne Abzug.<br>
+            Bei Zahlung bis zum <strong>05.04.2026</strong>: <strong>2% Skonto</strong> (114,19 € Abzug).<br>
+            Zahlbetrag dann: <strong>5.595,43 €</strong>.
+          </div>
+        </div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-step-number">2</div>
+        <div class="guide-step-content">
+          <h4>Typische Konditionen</h4>
+          <ul style="margin:4px 0 0 16px;color:var(--gray-600);font-size:0.88rem;line-height:1.8;">
+            <li><strong>2% bei 10 Tagen</strong> – Standard im Handwerk</li>
+            <li><strong>3% bei 7 Tagen</strong> – für Stammkunden</li>
+            <li><strong>5% bei Vorkasse</strong> – eher selten</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tipps -->
+    <div class="card guide-section" data-keywords="tipps backup sichern datensicherung handy mobil demo daten">
+      <h3 class="mb-16">Wichtige Tipps</h3>
+
+      <div class="guide-step">
+        <div class="guide-step-number">💾</div>
+        <div class="guide-step-content">
+          <h4>Regelmäßig Backup machen!</h4>
+          <div class="guide-nav-badge">⚙️ Einstellungen → Abschnitt 10: <strong>Datensicherung</strong> → Backup herunterladen</div>
+          <p>Deine Daten sind im Browser gespeichert. Wenn du den Cache löschst, sind sie weg. Mach mindestens einmal pro Woche ein Backup.</p>
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="guide-step-number">🧪</div>
+        <div class="guide-step-content">
+          <h4>Demo-Daten zum Ausprobieren</h4>
+          <div class="guide-nav-badge">⚙️ Einstellungen → Abschnitt 11: <strong>Demo-Daten laden</strong></div>
+          <p>Lade Beispieldaten, um alle Funktionen durchzuspielen. Danach mit <strong>Demo-Daten löschen</strong> wieder aufräumen – deine echten Daten bleiben erhalten.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- AGB -->
+    <div class="card guide-section" data-keywords="agb allgemeine geschäftsbedingungen pdf hochladen anhang anlage beleg rechnung versenden">
+      <h3 class="mb-16">AGB – Allgemeine Geschäftsbedingungen</h3>
+      <p style="color:var(--gray-600);font-size:0.88rem;line-height:1.6;margin-bottom:12px;">
+        Du hast fertige AGB als PDF? ElektroHub kann sie an deine Belege anhängen.
+      </p>
+
+      <div class="guide-step">
+        <div class="guide-step-number">1</div>
+        <div class="guide-step-content">
+          <h4>AGB-PDF hochladen</h4>
+          <div class="guide-nav-badge">⚙️ Einstellungen → Abschnitt 2: <strong>AGB</strong></div>
+          <p>Lade deine AGB als PDF hoch (max. 5 MB).</p>
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="guide-step-number">2</div>
+        <div class="guide-step-content">
+          <h4>Hinweis aktivieren</h4>
+          <div class="guide-nav-badge">⚙️ Einstellungen → AGB → <strong>„AGB-Hinweis auf Belegen anzeigen" ✓</strong></div>
+          <p>Dann erscheint auf jedem Beleg automatisch:</p>
+          <div style="margin:8px 0;padding:10px 14px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:6px;font-size:0.85rem;font-style:italic;color:#555;">
+            Es gelten unsere Allgemeinen Geschäftsbedingungen (siehe Anlage).
+          </div>
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="guide-step-number">3</div>
+        <div class="guide-step-content">
+          <h4>Beim Versenden</h4>
+          <p>Wenn du PDF exportierst, fragt die App: <em>„AGB-PDF herunterladen?"</em> → Beide Dateien per Mail verschicken.</p>
+          <p class="mt-8"><strong>📎 AGB</strong>-Button auf jedem Beleg ladt die AGB-PDF einzeln herunter.</p>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;padding:12px 16px;background:var(--gray-50);border-radius:8px;font-size:0.88rem;line-height:1.6;">
+        <strong>Kurz:</strong> Einmal einrichten (PDF + Haken) → danach automatisch auf jedem Beleg. Beim Versenden bietet die App den AGB-Download an.
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    function filterGuide() {
+      const query = (document.getElementById('guide-search').value || '').toLowerCase().trim();
+      let visible = 0;
+      document.querySelectorAll('.guide-section').forEach(section => {
+        if (!query) { section.style.display = ''; visible++; return; }
+        const keywords = (section.dataset.keywords || '').toLowerCase();
+        const text = section.textContent.toLowerCase();
+        const match = query.split(/\s+/).every(word => keywords.includes(word) || text.includes(word));
+        section.style.display = match ? '' : 'none';
+        if (match) visible++;
+      });
+      document.getElementById('guide-no-result').style.display = (query && visible === 0) ? '' : 'none';
+    }
+  </script>
+</body>
+</html>
