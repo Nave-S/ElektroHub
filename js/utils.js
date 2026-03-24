@@ -2,6 +2,57 @@
 // ElektroHub – Utility Functions
 // ============================================
 
+// ---- Präzise Arithmetik mit Big.js ----
+// Alle Geld-Berechnungen laufen über diese Funktionen
+const M = {
+  // Multiplizieren: Menge × Preis
+  mul(a, b) { return new Big(a || 0).times(b || 0).round(2).toNumber(); },
+  // Addieren
+  add(a, b) { return new Big(a || 0).plus(b || 0).round(2).toNumber(); },
+  // Subtrahieren
+  sub(a, b) { return new Big(a || 0).minus(b || 0).round(2).toNumber(); },
+  // Dividieren
+  div(a, b) { return b ? new Big(a || 0).div(b).round(2).toNumber() : 0; },
+  // Runden auf 2 Dezimalstellen
+  round2(a) { return new Big(a || 0).round(2).toNumber(); },
+  // Summe eines Arrays
+  sum(arr) { return arr.reduce((s, v) => new Big(s).plus(v || 0), new Big(0)).round(2).toNumber(); },
+  // Positions-Total: Menge × Preis × (1 - Rabatt/100)
+  posTotal(qty, price, discount) {
+    return new Big(qty || 0).times(price || 0).times(new Big(1).minus(new Big(discount || 0).div(100))).round(2).toNumber();
+  },
+  // Netto zu Brutto (mit MwSt-Satz als ganze Zahl, z.B. 19)
+  netToGross(net, mwstPercent) {
+    return new Big(net || 0).times(new Big(1).plus(new Big(mwstPercent || 0).div(100))).round(2).toNumber();
+  },
+  // MwSt-Betrag berechnen
+  tax(net, mwstPercent) {
+    return new Big(net || 0).times(new Big(mwstPercent || 0).div(100)).round(2).toNumber();
+  },
+  // Skonto-Betrag
+  skonto(brutto, skontoPercent) {
+    return new Big(brutto || 0).times(new Big(skontoPercent || 0).div(100)).round(2).toNumber();
+  },
+  // Brutto aus Positionen berechnen (gemischte MwSt-Sätze, mit Rabatt)
+  grossFromPositions(positions, isKU) {
+    if (isKU) return M.sum(positions.map(p => p.total || 0));
+    const net = M.sum(positions.map(p => p.total || 0));
+    const taxByRate = {};
+    (positions || []).forEach(p => {
+      const rate = p.mwstRate != null ? p.mwstRate : 19;
+      const posNet = p.total || 0;
+      taxByRate[rate] = M.add(taxByRate[rate] || 0, M.tax(posNet, rate));
+    });
+    const totalTax = M.sum(Object.values(taxByRate));
+    return M.add(net, totalTax);
+  },
+  // Marge in Prozent
+  margin(revenue, cost) {
+    if (!revenue || revenue === 0) return 0;
+    return new Big(revenue).minus(cost || 0).div(revenue).times(100).round(1).toNumber();
+  }
+};
+
 function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
 }
@@ -116,7 +167,9 @@ function getCustomerDisplayName(customer) {
 
 const CALC_POSITION_TYPES = [
   { value: 'material', label: 'Material' },
-  { value: 'stunden', label: 'Eigenleistung (Std.)' },
+  { value: 'stunden', label: 'Meister (Std.)' },
+  { value: 'stunden_geselle', label: 'Geselle (Std.)' },
+  { value: 'stunden_helfer', label: 'Helfer (Std.)' },
   { value: 'pauschale', label: 'Eigenleistung (Pausch.)' },
   { value: 'nebenkosten', label: 'Nebenkosten' },
 ];
@@ -292,12 +345,11 @@ async function loadMwstRate() {
 }
 
 function nettoToBrutto(netto) {
-  return netto * (1 + MWST_RATE);
+  return M.netToGross(netto, MWST_RATE * 100);
 }
 
 function calcMarginPercent(revenue, cost) {
-  if (!revenue || revenue === 0) return 0;
-  return Math.round(((revenue - cost) / revenue) * 10000) / 100;
+  return M.margin(revenue, cost);
 }
 
 function marginClass(pct) {
@@ -306,9 +358,9 @@ function marginClass(pct) {
   return 'margin-good';
 }
 
-// Skonto berechnen (gerundet auf 2 Dezimalstellen)
+// Skonto berechnen (präzise mit Big.js)
 function calcSkonto(bruttoBetrag, skontoProzent) {
-  return Math.round((bruttoBetrag || 0) * ((skontoProzent || 0) / 100) * 100) / 100;
+  return M.skonto(bruttoBetrag, skontoProzent);
 }
 
 // Fälligkeitsdatum berechnen
@@ -325,7 +377,6 @@ async function isKleinunternehmer() {
 
 // Arbeitskosten aus Positionen berechnen (für Handwerkerbonus)
 function calcArbeitskosten(positions) {
-  return (positions || [])
-    .filter(p => p.type === 'stunden' || p.type === 'pauschale' || p.type === 'nebenkosten')
-    .reduce((sum, p) => sum + (p.total || 0), 0);
+  const arbeitsTypen = ['stunden', 'stunden_geselle', 'stunden_helfer', 'pauschale', 'nebenkosten'];
+  return M.sum((positions || []).filter(p => arbeitsTypen.includes(p.type)).map(p => p.total || 0));
 }

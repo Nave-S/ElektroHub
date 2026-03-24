@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ElektroHub – Elektro-Fachbetrieb Management</title>
   <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/big.js@6/big.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
 </head>
@@ -13,7 +14,14 @@
     <nav id="sidebar">
       <div class="sidebar-header">
         <h1>⚡ ElektroHub</h1>
-        <span class="version" id="app-version">v2.0 Web</span>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span class="version" id="app-version">v2.0</span>
+          <span style="font-size:0.6rem;padding:1px 6px;border-radius:4px;background:#fbbf24;color:#78350f;font-weight:600;">PROTOTYP</span>
+        </div>
+      </div>
+      <div style="padding:8px 12px;">
+        <input type="text" id="global-search" placeholder="🔍 Suchen..." oninput="GlobalSearch.search(this.value)" onfocus="GlobalSearch.open()" style="width:100%;padding:7px 10px;border:1px solid var(--gray-700);border-radius:6px;background:var(--gray-800);color:white;font-size:0.85rem;outline:none;">
+        <div id="global-search-results" style="display:none;"></div>
       </div>
       <ul class="nav-menu">
         <li class="nav-item active" data-view="dashboard">
@@ -105,6 +113,7 @@
   <script src="js/views/statistics.js"></script>
   <script src="js/views/guide.js"></script>
   <script src="js/views/appinfo.js"></script>
+  <script src="js/search.js"></script>
   <script src="js/onboarding.js"></script>
   <script src="js/autosave.js"></script>
   <script src="js/audit.js"></script>

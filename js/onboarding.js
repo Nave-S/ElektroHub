@@ -660,17 +660,19 @@ const Onboarding = {
 
     // ── Beispiel-Kalkulation anlegen ──
     const hourlyRate = d.hourlyRate || 55;
+    const mwst = d.kleinunternehmer ? 0 : 19;
     const positions = [
-      { type: 'material', description: 'NYM-J 3×1,5mm² verlegen (UP), inkl. Schlitz und Verschließen', quantity: 80, unit: 'Meter', unitPrice: 4.50, mwstRate: 19, discount: 0, total: 360, cost: 252 },
-      { type: 'material', description: 'NYM-J 5×2,5mm² verlegen (UP), inkl. Schlitz und Verschließen', quantity: 40, unit: 'Meter', unitPrice: 6.80, mwstRate: 19, discount: 0, total: 272, cost: 190.4 },
-      { type: 'material', description: 'Steckdose setzen (UP), inkl. Dose, Rahmen und Einsatz', quantity: 24, unit: 'Stück', unitPrice: 38, mwstRate: 19, discount: 0, total: 912, cost: 638.4 },
-      { type: 'material', description: 'Lichtschalter setzen (UP), inkl. Dose, Rahmen und Einsatz', quantity: 12, unit: 'Stück', unitPrice: 35, mwstRate: 19, discount: 0, total: 420, cost: 294 },
-      { type: 'material', description: 'Zählerschrank 3-reihig, inkl. Bestückung und Verdrahtung', quantity: 1, unit: 'Stück', unitPrice: 680, mwstRate: 19, discount: 0, total: 680, cost: 476 },
-      { type: 'stunden', description: 'Elektroinstallation komplett (Arbeitszeit)', quantity: 32, unit: 'Stunde', unitPrice: hourlyRate, mwstRate: 19, discount: 0, total: 32 * hourlyRate, cost: 0 },
-      { type: 'nebenkosten', description: 'Anfahrtspauschale', quantity: 5, unit: 'Pauschal', unitPrice: 35, mwstRate: 19, discount: 0, total: 175, cost: 0 },
+      { type: 'material', description: 'NYM-J 3×1,5mm² verlegen (UP), inkl. Schlitz', quantity: 80, unit: 'Meter', unitPrice: 4.50, mwstRate: mwst, discount: 0, total: M.mul(80, 4.50), cost: M.mul(M.mul(80, 4.50), 0.7) },
+      { type: 'material', description: 'NYM-J 5×2,5mm² verlegen (UP)', quantity: 40, unit: 'Meter', unitPrice: 6.80, mwstRate: mwst, discount: 0, total: M.mul(40, 6.80), cost: M.mul(M.mul(40, 6.80), 0.7) },
+      { type: 'material', description: 'Steckdose setzen (UP), inkl. Dose, Rahmen, Einsatz', quantity: 24, unit: 'Stück', unitPrice: 38, mwstRate: mwst, discount: 0, total: M.mul(24, 38), cost: M.mul(M.mul(24, 38), 0.7) },
+      { type: 'material', description: 'Lichtschalter setzen (UP)', quantity: 12, unit: 'Stück', unitPrice: 35, mwstRate: mwst, discount: 0, total: M.mul(12, 35), cost: M.mul(M.mul(12, 35), 0.7) },
+      { type: 'material', description: 'Zählerschrank 3-reihig, inkl. Bestückung', quantity: 1, unit: 'Stück', unitPrice: 680, mwstRate: mwst, discount: 0, total: 680, cost: 476 },
+      { type: 'stunden', description: 'Meister – Elektroinstallation', quantity: 24, unit: 'Stunde', unitPrice: hourlyRate, mwstRate: mwst, discount: 0, total: M.mul(24, hourlyRate), cost: 0 },
+      { type: 'stunden_geselle', description: 'Geselle – Montage und Verkabelung', quantity: 32, unit: 'Stunde', unitPrice: 45, mwstRate: mwst, discount: 0, total: M.mul(32, 45), cost: 0 },
+      { type: 'nebenkosten', description: 'Anfahrtspauschale', quantity: 5, unit: 'Pauschal', unitPrice: 35, mwstRate: mwst, discount: 0, total: M.mul(5, 35), cost: 0 },
     ];
-    const totalNet = positions.reduce((s, p) => s + p.total, 0);
-    const totalCost = positions.reduce((s, p) => s + (p.cost || 0), 0);
+    const totalNet = M.sum(positions.map(p => p.total));
+    const totalCost = M.sum(positions.map(p => p.cost || 0));
 
     const calcId = generateId();
     await db.put(STORES.calculations, {
@@ -696,7 +698,7 @@ const Onboarding = {
         taxByRate[rate] = (taxByRate[rate] || 0) + (p.total || 0) * (rate / 100);
       });
       const totalTax = Object.values(taxByRate).reduce((s, v) => s + v, 0);
-      totalGross = Math.round((totalNet + totalTax) * 100) / 100;
+      totalGross = M.add(totalNet, totalTax);
     }
     const paymentDays = d.paymentDays || 14;
 

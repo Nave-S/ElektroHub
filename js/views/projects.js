@@ -242,7 +242,6 @@ const ProjectsView = {
         <div class="card-header">
           <h3>Belege (${invoices.length})</h3>
           <div class="btn-group">
-            <button class="btn btn-small btn-secondary" onclick="InvoicesView.createForProject('${project.id}', '${customer ? customer.name : ''}', '${customer ? (customer.address || '').replace(/'/g, "\\'") : ''}', 'lieferschein')">Lieferschein</button>
             <button class="btn btn-small btn-secondary" onclick="InvoicesView.createForProject('${project.id}', '${customer ? customer.name : ''}', '${customer ? (customer.address || '').replace(/'/g, "\\'") : ''}', 'abnahmeprotokoll')">Abnahmeprotokoll</button>
           </div>
         </div>
@@ -416,6 +415,8 @@ const ProjectsView = {
     let calc = editCalcId ? await db.get(STORES.calculations, editCalcId) : null;
     const isEdit = !!calc;
     const articles = await db.getAll(STORES.articles);
+    // Standard-Aufschlag laden für Kostenberechnung
+    ProjectsView._defaultMarkup = await db.getSetting('defaultMarkup', 15);
 
     if (!calc) {
       calc = {
@@ -479,8 +480,8 @@ const ProjectsView = {
       calc.title = fd.get('title') || 'Kalkulation';
       calc.positions = ProjectsView._collectPositions()
         .filter(p => p.description.trim() || p.total > 0); // Leere Zeilen entfernen
-      calc.totalNet = Math.round(calc.positions.reduce((s, p) => s + p.total, 0) * 100) / 100;
-      calc.totalCost = Math.round(calc.positions.reduce((s, p) => s + (p.cost || 0), 0) * 100) / 100;
+      calc.totalNet = M.sum(calc.positions.map(p => p.total));
+      calc.totalCost = M.sum(calc.positions.map(p => p.cost || 0));
       calc.updatedAt = new Date().toISOString();
 
       await db.put(STORES.calculations, calc);
@@ -496,7 +497,7 @@ const ProjectsView = {
     ).join('');
     return `
       <div class="calc-position-project" data-index="${index}">
-        <select name="pos-type" onchange="ProjectsView._recalculate()">
+        <select name="pos-type" onchange="ProjectsView._onTypeChange(this)">
           ${selectOptions(CALC_POSITION_TYPES, pos.type)}
         </select>
         <input type="text" name="pos-desc" placeholder="Beschreibung" value="${escapeHtml(pos.description || '')}">
@@ -509,16 +510,43 @@ const ProjectsView = {
     `;
   },
 
-  _addPosition(prefill) {
+  async _addPosition(prefill) {
     const container = document.getElementById('calc-positions');
     const index = container.children.length;
+    const type = prefill?.type || 'material';
+
+    // Standard-Preise aus Einstellungen vorladen
+    let autoPrice = prefill?.unitPrice || 0;
+    let autoUnit = prefill?.unit || 'Stück';
+    if (!prefill?.unitPrice || prefill.unitPrice === 0) {
+      if (type === 'stunden') {
+        autoPrice = await db.getSetting('defaultHourlyRateMeister', 55);
+        autoUnit = 'Stunde';
+      } else if (type === 'stunden_geselle') {
+        autoPrice = await db.getSetting('defaultHourlyRateGeselle', 45);
+        autoUnit = 'Stunde';
+      } else if (type === 'stunden_helfer') {
+        autoPrice = await db.getSetting('defaultHourlyRateHelfer', 25);
+        autoUnit = 'Stunde';
+      } else if (type === 'nebenkosten') {
+        const desc = (prefill?.description || '').toLowerCase();
+        if (desc.includes('anfahrt') || desc.includes('fahrt')) {
+          autoPrice = await db.getSetting('defaultAnfahrt', 35);
+          autoUnit = 'Pauschal';
+        } else if (desc.includes('km') || desc.includes('kilometer')) {
+          autoPrice = await db.getSetting('kmPauschale', 0.52);
+          autoUnit = 'km';
+        }
+      }
+    }
+
     const pos = {
-      type: prefill?.type || 'material',
+      type,
       description: prefill?.description || '',
-      unit: prefill?.unit || 'Stück',
+      unit: prefill?.unit || autoUnit,
       quantity: prefill?.quantity || 1,
-      unitPrice: prefill?.unitPrice || 0,
-      total: (prefill?.quantity || 1) * (prefill?.unitPrice || 0),
+      unitPrice: autoPrice,
+      total: M.mul(prefill?.quantity || 1, autoPrice),
     };
     container.insertAdjacentHTML('beforeend', ProjectsView._positionRowHtml(pos, index, ProjectsView._articleOptions));
     ProjectsView._recalculate();
@@ -555,6 +583,32 @@ const ProjectsView = {
     openPicker('Textbaustein einfügen', html);
   },
 
+  async _onTypeChange(select) {
+    const row = select.closest('.calc-position-project');
+    if (!row) { ProjectsView._recalculate(); return; }
+    const type = select.value;
+    const priceInput = row.querySelector('[name="pos-price"]');
+    const unitSelect = row.querySelector('[name="pos-unit"]');
+
+    const currentPrice = parseFloat(priceInput?.value) || 0;
+    if (currentPrice === 0) {
+      if (type === 'stunden') {
+        priceInput.value = await db.getSetting('defaultHourlyRateMeister', 55);
+        if (unitSelect) unitSelect.value = 'Stunde';
+      } else if (type === 'stunden_geselle') {
+        priceInput.value = await db.getSetting('defaultHourlyRateGeselle', 45);
+        if (unitSelect) unitSelect.value = 'Stunde';
+      } else if (type === 'stunden_helfer') {
+        priceInput.value = await db.getSetting('defaultHourlyRateHelfer', 25);
+        if (unitSelect) unitSelect.value = 'Stunde';
+      } else if (type === 'nebenkosten') {
+        priceInput.value = await db.getSetting('defaultAnfahrt', 35);
+        if (unitSelect) unitSelect.value = 'Pauschal';
+      }
+    }
+    ProjectsView._recalculate();
+  },
+
   _filterCalcTextBlocks() {
     const search = (document.getElementById('tb-calc-search')?.value || '').toLowerCase();
     const cat = document.getElementById('tb-calc-cat')?.value || '';
@@ -584,11 +638,11 @@ const ProjectsView = {
       const unit = unitEl ? unitEl.value : 'Stück';
       const quantity = parseFloat(row.querySelector('[name="pos-qty"]').value) || 0;
       const unitPrice = parseFloat(row.querySelector('[name="pos-price"]').value) || 0;
-      const total = Math.round(quantity * unitPrice * 100) / 100;
-      // Materialkosten schaetzen: VK-Preis abzgl. Standard-Aufschlag
-      // Eigenleistung hat keine Materialkosten
+      const total = M.mul(quantity, unitPrice);
       const isMaterial = type === 'material';
-      const cost = isMaterial ? Math.round(total * 0.7 * 100) / 100 : 0;
+      const markupPct = ProjectsView._defaultMarkup || 15;
+      const costFactor = M.div(100, M.add(100, markupPct));
+      const cost = isMaterial ? M.mul(total, costFactor) : 0;
       return { type, description, unit, quantity, unitPrice, total, cost };
     });
   },
@@ -603,12 +657,11 @@ const ProjectsView = {
         row.querySelector('.pos-total').textContent = formatCurrency(positions[i].total);
       }
     });
-    const net = positions.reduce((s, p) => s + p.total, 0);
-    // KU-Check: Wenn taxRow versteckt, keine MwSt berechnen
+    const net = M.sum(positions.map(p => p.total));
     const taxRow = document.getElementById('calc-sum-tax-row');
     const isHidden = taxRow && taxRow.style.display === 'none';
-    const tax = isHidden ? 0 : net * MWST_RATE;
-    const gross = net + tax;
+    const tax = isHidden ? 0 : M.tax(net, MWST_RATE * 100);
+    const gross = M.add(net, tax);
     const netEl = document.getElementById('calc-sum-net');
     const taxEl = document.getElementById('calc-sum-tax');
     const grossEl = document.getElementById('calc-sum-gross');

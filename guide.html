@@ -254,26 +254,48 @@
     </div>
 
     <!-- Funktionen -->
-    <div class="card guide-section" data-keywords="funktionen dokumenttypen textbausteine lager statistiken qr code einstellungen kleinunternehmer skonto handwerkerbonus">
+    <div class="card guide-section" data-keywords="funktionen dokumenttypen textbausteine statistiken qr code einstellungen kleinunternehmer skonto handwerkerbonus zeiterfassung pruefprotokoll echeck foto suche datev">
       <h3 class="mb-16">Funktionen im Detail</h3>
+
+      <div class="guide-step">
+        <div class="guide-step-number">🔍</div>
+        <div class="guide-step-content">
+          <h4>Globale Suche</h4>
+          <p>Suchfeld oben in der Seitenleiste. Versteht auch Umschreibungen (z.B. „Rabatt" findet Skonto). Tastenkürzel: <strong>Strg+K</strong>.</p>
+        </div>
+      </div>
 
       <div class="guide-step">
         <div class="guide-step-number">📄</div>
         <div class="guide-step-content">
           <h4>14 Dokumenttypen</h4>
-          <p>Angebot, Auftragsbestätigung, Rechnung, Abschlagsrechnung, Schlussrechnung, Stornorechnung, Gutschrift, Lieferschein, Kostenvoranschlag, Abnahmeprotokoll, Zahlungserinnerung, 2. Mahnung, Letzte Mahnung, Invoice (EN).</p>
-          <div class="guide-nav-badge">⚙️ Einstellungen → Abschnitt 7: <strong>Dokumentvorlagen</strong></div>
-          <p class="mt-8">Jeder Typ hat eigene Vorlagentexte (Einleitung, Schlusstext, E-Mail). Du kannst sie dort anpassen.</p>
+          <p>KV, Angebot, AB, Rechnung, Abschlag, Schlussrechnung, Storno, Gutschrift, Lieferschein, Abnahmeprotokoll, Mahnungen (3 Stufen), Invoice EN. Alle Abkürzungen haben Tooltips.</p>
         </div>
       </div>
 
       <div class="guide-step">
         <div class="guide-step-number">📋</div>
         <div class="guide-step-content">
-          <h4>Textbausteine</h4>
-          <p>Über 40 vorgefertigte Leistungsbeschreibungen in 6 Kategorien. Du erreichst sie beim Erstellen von Kalkulationen oder Belegen über den <strong>📋 Textbaustein</strong>-Button.</p>
-          <div class="guide-nav-badge">⚙️ Einstellungen → Abschnitt 8: <strong>Textbausteine verwalten</strong></div>
-          <p class="mt-8">Eigene Textbausteine anlegen, bearbeiten oder löschen.</p>
+          <h4>Kalkulationen</h4>
+          <p>Positionstypen: <strong>Material, Meister/Geselle/Helfer (Std.), Pauschale, Nebenkosten</strong>. Stundensätze werden aus Einstellungen vorausgefüllt. Pro Position: Einheit, MwSt-Satz (19/7/0%), Rabatt.</p>
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="guide-step-number">⏱️</div>
+        <div class="guide-step-content">
+          <h4>Zeiterfassung</h4>
+          <div class="guide-nav-badge">⏱️ Zeiterfassung (in der Seitenleiste)</div>
+          <p>Live-Timer oder manuelle Einträge. Wochen-/Monatsübersicht pro Projekt und Mitarbeiter.</p>
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="guide-step-number">🔌</div>
+        <div class="guide-step-content">
+          <h4>Prüfprotokolle</h4>
+          <div class="guide-nav-badge">🔌 Prüfprotokolle (in der Seitenleiste)</div>
+          <p>E-Check und DGUV V3 Prüfungen mit Messwerten, Mängeln und digitaler Unterschrift.</p>
         </div>
       </div>
 
@@ -281,19 +303,18 @@
         <div class="guide-step-number">📊</div>
         <div class="guide-step-content">
           <h4>Statistiken</h4>
-          <div class="guide-nav-badge">📊 Statistiken (in der Seitenleiste)</div>
-          <p>5 Auswertungen: Jahresübersicht, Umsatzverteilung, Projekt-Auswertung, Offene Posten, Lager-Auswertung.</p>
+          <p>Jahresübersicht, Umsatzverteilung (4 Diagramme), Projekt-Auswertung (Soll/Ist), Offene Posten. Bei Kleinunternehmer ohne MwSt-Spalten.</p>
         </div>
       </div>
 
       <div class="guide-step">
         <div class="guide-step-number">⚙️</div>
         <div class="guide-step-content">
-          <h4>Wichtige Einstellungen</h4>
-          <div class="guide-nav-badge">⚙️ Einstellungen → Abschnitt 5: <strong>Dokumenteinstellungen</strong></div>
-          <ul style="margin:4px 0 0 20px;color:var(--gray-600);font-size:0.9rem;line-height:1.8;">
-            <li><strong>Kleinunternehmer (§19 UStG)</strong> – keine MwSt. auf Belegen</li>
-            <li><strong>Skonto</strong> – Prozentsatz und Frist einstellen</li>
+          <h4>Einstellungen – Was wo wirkt</h4>
+          <ul style="margin:4px 0 0 20px;color:var(--gray-600);font-size:0.85rem;line-height:1.8;">
+            <li><strong>Betriebsart</strong> – Kleinunternehmer oder Regelbesteuert (wirkt überall)</li>
+            <li><strong>Stundensätze</strong> – Meister/Geselle/Helfer → in Kalkulationen eingesetzt</li>
+            <li><strong>Skonto</strong> – Standard-Werte, pro Beleg anpassbar</li>
             <li><strong>Handwerkerbonus</strong> – Arbeitskosten-Anteil anzeigen</li>
             <li><strong>Nummernkreise</strong> – Prefixe konfigurieren (z.B. RE-, AG-)</li>
           </ul>

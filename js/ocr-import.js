@@ -414,7 +414,7 @@ const OCRImport = {
     document.querySelectorAll('#ocr-positions .calc-position').forEach(row => {
       const q = parseFloat(row.querySelector('[name="ocr-pos-qty"]')?.value) || 0;
       const p = parseFloat(row.querySelector('[name="ocr-pos-price"]')?.value) || 0;
-      const t = Math.round(q * p * 100) / 100;
+      const t = M.mul(q, p);
       total += t;
       const el = row.querySelector('.pos-total');
       if (el) el.textContent = formatCurrency(t);
@@ -429,12 +429,12 @@ const OCRImport = {
       const description = row.querySelector('[name="ocr-pos-desc"]')?.value || '';
       const quantity = parseFloat(row.querySelector('[name="ocr-pos-qty"]')?.value) || 0;
       const unitPrice = parseFloat(row.querySelector('[name="ocr-pos-price"]')?.value) || 0;
-      return { description, quantity, unitPrice, total: Math.round(quantity * unitPrice * 100) / 100 };
+      return { description, quantity, unitPrice, total: M.mul(quantity, unitPrice) };
     }).filter(p => p.description.trim() || p.total > 0);
 
-    const totalNet = Math.round(positions.reduce((s, p) => s + p.total, 0) * 100) / 100;
+    const totalNet = M.sum(positions.map(p => p.total));
     const isKU = await isKleinunternehmer();
-    const totalGross = isKU ? totalNet : Math.round(totalNet * (1 + MWST_RATE) * 100) / 100;
+    const totalGross = isKU ? totalNet : M.netToGross(totalNet, MWST_RATE * 100);
     const defaultPaymentDays = await db.getSetting('defaultPaymentDays', 14);
     const number = await db.getNextNumber(type);
     const dt = getDocType(type);

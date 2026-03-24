@@ -9,29 +9,25 @@ const Validator = {
     const errors = [];
     const positions = invoice.positions || [];
 
-    // 1. Positionen-Summen prüfen (supports discount per position)
+    // 1. Positionen-Summen prüfen (Big.js Präzision)
     for (let i = 0; i < positions.length; i++) {
       const pos = positions[i];
-      const discountFactor = 1 - ((pos.discount || 0) / 100);
-      const expected = Math.round((pos.quantity || 0) * (pos.unitPrice || 0) * discountFactor * 100) / 100;
-      const actual = Math.round((pos.total || 0) * 100) / 100;
-      if (Math.abs(expected - actual) > 0.01) {
+      const expected = M.posTotal(pos.quantity, pos.unitPrice, pos.discount);
+      const actual = M.round2(pos.total);
+      if (Math.abs(expected - actual) > 0.001) {
         errors.push({
           type: 'position_total',
           severity: 'error',
-          message: `Position ${i + 1} "${pos.description || '?'}": Menge × Preis${pos.discount ? ' × Rabatt' : ''} = ${expected.toFixed(2)} €, gespeichert: ${actual.toFixed(2)} €`,
+          message: `Position ${i + 1} "${pos.description || '?'}": berechnet ${expected.toFixed(2)} €, gespeichert: ${actual.toFixed(2)} €`,
           fix: { posIndex: i, field: 'total', correctValue: expected }
         });
       }
     }
 
     // 2. Netto-Summe prüfen
-    const recalcNet = Math.round(positions.reduce((s, p) => {
-      const df = 1 - ((p.discount || 0) / 100);
-      return s + (p.quantity || 0) * (p.unitPrice || 0) * df;
-    }, 0) * 100) / 100;
-    const storedNet = Math.round((invoice.totalNet || 0) * 100) / 100;
-    if (Math.abs(recalcNet - storedNet) > 0.01) {
+    const recalcNet = M.sum(positions.map(p => M.posTotal(p.quantity, p.unitPrice, p.discount)));
+    const storedNet = M.round2(invoice.totalNet);
+    if (Math.abs(recalcNet - storedNet) > 0.001) {
       errors.push({
         type: 'total_net',
         severity: 'error',
@@ -40,24 +36,14 @@ const Validator = {
       });
     }
 
-    // 3. Brutto-Summe prüfen (supports mixed MwSt rates per position)
-    let expectedGross;
-    if (isKU) {
-      expectedGross = recalcNet;
-    } else {
-      // Group tax by per-position mwstRate (default to global mwstRate for backward compat)
-      const taxByRate = {};
-      positions.forEach(p => {
-        const df = 1 - ((p.discount || 0) / 100);
-        const posNet = (p.quantity || 0) * (p.unitPrice || 0) * df;
-        const rate = p.mwstRate != null ? p.mwstRate : (mwstRate * 100);
-        taxByRate[rate] = (taxByRate[rate] || 0) + posNet * (rate / 100);
-      });
-      const totalTax = Object.values(taxByRate).reduce((s, v) => s + v, 0);
-      expectedGross = Math.round((recalcNet + totalTax) * 100) / 100;
-    }
-    const storedGross = Math.round((invoice.totalGross || 0) * 100) / 100;
-    if (Math.abs(expectedGross - storedGross) > 0.01) {
+    // 3. Brutto-Summe prüfen (Big.js, gemischte MwSt pro Position)
+    const recalcPositions = positions.map(p => ({
+      ...p,
+      total: M.posTotal(p.quantity, p.unitPrice, p.discount),
+    }));
+    const expectedGross = M.grossFromPositions(recalcPositions, isKU);
+    const storedGross = M.round2(invoice.totalGross);
+    if (Math.abs(expectedGross - storedGross) > 0.001) {
       errors.push({
         type: 'total_gross',
         severity: 'warning',
@@ -109,37 +95,25 @@ const Validator = {
     const isKU = await isKleinunternehmer();
     let changed = false;
 
-    // Positionen-Summen korrigieren (supports discount)
+    // Positionen-Summen korrigieren (Big.js Präzision)
     (invoice.positions || []).forEach(pos => {
-      const discountFactor = 1 - ((pos.discount || 0) / 100);
-      const correct = Math.round((pos.quantity || 0) * (pos.unitPrice || 0) * discountFactor * 100) / 100;
-      if (Math.abs((pos.total || 0) - correct) > 0.01) {
+      const correct = M.posTotal(pos.quantity, pos.unitPrice, pos.discount);
+      if (Math.abs((pos.total || 0) - correct) > 0.001) {
         pos.total = correct;
         changed = true;
       }
     });
 
     // Netto neu berechnen
-    const correctNet = Math.round((invoice.positions || []).reduce((s, p) => s + (p.total || 0), 0) * 100) / 100;
-    if (Math.abs((invoice.totalNet || 0) - correctNet) > 0.01) {
+    const correctNet = M.sum((invoice.positions || []).map(p => p.total || 0));
+    if (Math.abs((invoice.totalNet || 0) - correctNet) > 0.001) {
       invoice.totalNet = correctNet;
       changed = true;
     }
 
-    // Brutto neu berechnen (supports mixed MwSt rates)
-    let correctGross;
-    if (isKU) {
-      correctGross = correctNet;
-    } else {
-      const taxByRate = {};
-      (invoice.positions || []).forEach(p => {
-        const rate = p.mwstRate != null ? p.mwstRate : Math.round(MWST_RATE * 100);
-        taxByRate[rate] = (taxByRate[rate] || 0) + (p.total || 0) * (rate / 100);
-      });
-      const totalTax = Object.values(taxByRate).reduce((s, v) => s + v, 0);
-      correctGross = Math.round((correctNet + totalTax) * 100) / 100;
-    }
-    if (Math.abs((invoice.totalGross || 0) - correctGross) > 0.01) {
+    // Brutto neu berechnen (Big.js, gemischte MwSt)
+    const correctGross = M.grossFromPositions(invoice.positions || [], isKU);
+    if (Math.abs((invoice.totalGross || 0) - correctGross) > 0.001) {
       invoice.totalGross = correctGross;
       changed = true;
     }
@@ -436,7 +410,7 @@ const Validator = {
       if (Math.abs((calc.totalNet || 0) - recalcNet) > 0.01) {
         calcMismatch++;
         // Auto-fix
-        calc.totalNet = Math.round(recalcNet * 100) / 100;
+        calc.totalNet = M.round2(recalcNet);
         calc.totalCost = (calc.positions || []).reduce((s, p) => s + (p.cost || 0), 0);
         calc.updatedAt = new Date().toISOString();
         await db.put(STORES.calculations, calc);

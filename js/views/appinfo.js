@@ -15,6 +15,8 @@ const AppInfoView = {
     const taxNumber = await db.getSetting('taxNumber', '');
     const ustId = await db.getSetting('ustId', '');
     const handwerksrollenNr = await db.getSetting('handwerksrollenNr', '');
+    const meisterbriefNr = await db.getSetting('meisterbriefNr', '');
+    const efgNr = await db.getSetting('efgNr', '');
 
     // System-Info
     const sysInfo = {
@@ -55,12 +57,16 @@ const AppInfoView = {
             <div class="mt-8" style="display:flex;gap:12px;flex-wrap:wrap;">
               <span class="badge badge-blue">Version ${APP_VERSION}</span>
               <span class="badge badge-gray">Build ${APP_BUILD}</span>
+              <span class="badge badge-yellow">Prototyp</span>
             </div>
           </div>
         </div>
         <p style="margin-top:16px;color:var(--gray-600);font-size:0.9rem;line-height:1.6;">
           ElektroHub hilft dir bei der Verwaltung deines Elektro-Fachbetriebs: Kunden, Projekte, Kalkulationen, Angebote, Rechnungen, Mahnungen und mehr – alles in einer App, direkt im Browser.
         </p>
+        <div style="margin-top:12px;padding:12px 16px;background:#fef3c7;border:1px solid #fbbf24;border-radius:8px;font-size:0.88rem;line-height:1.6;color:#92400e;">
+          <strong>Prototyp-Hinweis:</strong> Diese Software befindet sich in der Entwicklungsphase und dient derzeit ausschließlich zu Test- und Demonstrationszwecken. Berechnungen (MwSt., Skonto, Brutto/Netto) werden nach bestem Wissen durchgeführt, sind aber nicht zertifiziert. Keine GoBD-Zertifizierung. Für den produktiven Einsatz mit echten Geschäftsdaten übernehmen wir keine Haftung. Bitte alle Belege vor dem Versand an Kunden sorgfältig prüfen.
+        </div>
       </div>
 
       <!-- App QR-Code -->
@@ -127,6 +133,8 @@ const AppInfoView = {
               ${taxNumber ? `<br>Steuernummer: ${escapeHtml(taxNumber)}<br>` : ''}
               ${ustId ? `USt-IdNr.: ${escapeHtml(ustId)}<br>` : ''}
               ${handwerksrollenNr ? `Handwerksrollennummer: ${escapeHtml(handwerksrollenNr)}<br>` : ''}
+              ${meisterbriefNr ? `Meisterbriefnummer: ${escapeHtml(meisterbriefNr)}<br>` : ''}
+              ${efgNr ? `EFG-Nr.: ${escapeHtml(efgNr)}<br>` : ''}
             </div>
           ` : `
             <div class="alert-banner alert-warning">
@@ -165,10 +173,14 @@ const AppInfoView = {
               <span class="badge badge-gray">Lokal</span>
             </div>
 
-            <div style="padding:12px 16px;background:var(--gray-50);border-radius:8px;">
-              <strong>Haftungsausschluss</strong>
-              <p class="text-small text-muted" style="margin-top:4px;line-height:1.6;">
-                ElektroHub ist ein Hilfsmittel zur Betriebsverwaltung. Alle Berechnungen (MwSt., Skonto, Brutto/Netto) werden nach bestem Wissen durchgeführt, ersetzen aber keine steuerliche Beratung. Für die Richtigkeit der Berechnungen und die Einhaltung gesetzlicher Vorgaben (GoBD, UStG) ist der Anwender verantwortlich. Bitte prüfe wichtige Belege vor dem Versand.
+            <div style="padding:12px 16px;background:#fef3c7;border:1px solid #fbbf24;border-radius:8px;">
+              <strong>⚠️ Prototyp – Haftungsausschluss</strong>
+              <p style="margin-top:6px;font-size:0.88rem;line-height:1.6;color:#92400e;">
+                ElektroHub befindet sich in der <strong>Entwicklungsphase (Prototyp)</strong> und ist ausschließlich für Test- und Demonstrationszwecke vorgesehen.<br><br>
+                <strong>Keine Gewährleistung:</strong> Berechnungen (MwSt., Skonto, Brutto/Netto) werden nach bestem Wissen durchgeführt, können aber Fehler enthalten. Ergebnisse sind nicht steuerlich geprüft oder zertifiziert.<br><br>
+                <strong>Keine GoBD-Zertifizierung:</strong> Die Software erfüllt derzeit nicht die Anforderungen der GoBD. Nummernkreise, Änderungsprotokollierung und Archivierung sind implementiert, aber nicht auditiert.<br><br>
+                <strong>Keine Haftung:</strong> Für Schäden, die durch die Nutzung dieser Software entstehen – insbesondere durch fehlerhafte Berechnungen, fehlende Pflichtangaben oder Datenverlust – übernehmen wir keine Haftung.<br><br>
+                <strong>Empfehlung:</strong> Alle Belege vor dem Versand sorgfältig prüfen. Für den produktiven Einsatz die Ergebnisse mit einem Steuerberater abstimmen.
               </p>
             </div>
           </div>

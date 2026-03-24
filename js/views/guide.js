@@ -82,33 +82,65 @@ const GuideView = {
       </div>
 
       <!-- Funktionen im Detail -->
-      <div class="card guide-section" data-keywords="funktionen dokumenttypen textbausteine lager lagerverwaltung statistiken auswertungen qr code qr-code girocode sepa iban einstellungen kleinunternehmer skonto handwerkerbonus nummernkreise">
+      <div class="card guide-section" data-keywords="funktionen dokumenttypen textbausteine statistiken auswertungen qr code girocode sepa iban einstellungen kleinunternehmer skonto handwerkerbonus nummernkreise zeiterfassung pruefprotokoll echeck dguv foto galerie suche datev unterschrift reverse charge einheit mwst rabatt">
         <h3 class="mb-16">Funktionen im Detail</h3>
+
+        <div class="guide-step">
+          <div class="guide-step-number">🔍</div>
+          <div class="guide-step-content">
+            <h4>Globale Suche</h4>
+            <p>Oben in der Seitenleiste gibt es ein <strong>Suchfeld</strong>. Tippe z.B. „Rechnung", „Stundensatz" oder „neuer Kunde" – die Suche versteht auch Umschreibungen und zeigt passende Seiten und Aktionen. Tastenkürzel: <strong>Strg+K</strong>.</p>
+          </div>
+        </div>
 
         <div class="guide-step">
           <div class="guide-step-number">📄</div>
           <div class="guide-step-content">
-            <h4>Dokumenttypen</h4>
-            <p>ElektroHub unterstützt 14 Dokumenttypen: Angebot, Auftragsbestätigung, Rechnung, Abschlagsrechnung, Schlussrechnung, Stornorechnung, Gutschrift, Lieferschein, Kostenvoranschlag, Abnahmeprotokoll, Zahlungserinnerung, 2. Mahnung, Letzte Mahnung und Invoice (EN).</p>
-            <p class="mt-8">Jeder Typ hat <strong>eigene Vorlagentexte</strong> (Einleitung, Schlusstext, E-Mail). Du kannst diese unter <strong>Einstellungen → Dokumentvorlagen</strong> anpassen.</p>
+            <h4>14 Dokumenttypen</h4>
+            <p>Kostenvoranschlag, Angebot, Auftragsbestätigung, Rechnung, Abschlagsrechnung, Schlussrechnung, Stornorechnung, Gutschrift, Lieferschein, Abnahmeprotokoll, Zahlungserinnerung, 2. Mahnung, Letzte Mahnung, Invoice (EN).</p>
+            <p class="mt-8">Alle Abkürzungen haben <strong>Tooltips</strong> – fahre mit der Maus darüber um die Erklärung zu sehen.</p>
           </div>
         </div>
 
         <div class="guide-step">
           <div class="guide-step-number">📋</div>
           <div class="guide-step-content">
-            <h4>Textbausteine</h4>
-            <p>Textbausteine sind vorgefertigte Leistungsbeschreibungen, die du in Kalkulationen und Belege einfügen kannst. Es gibt über 40 Vorlagen in 6 Kategorien: Installationsarbeiten, Kabelverlegung, Verteiler & Zähler, Beleuchtung, Prüfung & Messung, Nebenkosten.</p>
-            <p class="mt-8">Eigene Textbausteine kannst du unter <strong>Einstellungen → Textbausteine</strong> anlegen.</p>
+            <h4>Kalkulationen mit Positionstypen</h4>
+            <p>In einer Kalkulation kannst du verschiedene Positionstypen wählen:</p>
+            <ul style="margin:8px 0 0 20px;color:var(--gray-600);font-size:0.9rem;line-height:1.8;">
+              <li><strong>Material</strong> – Kabel, Dosen, Schalter etc. (Preis manuell)</li>
+              <li><strong>Meister (Std.)</strong> – Stundensatz wird aus Einstellungen vorausgefüllt</li>
+              <li><strong>Geselle (Std.)</strong> – Stundensatz Geselle aus Einstellungen</li>
+              <li><strong>Helfer (Std.)</strong> – Stundensatz Helfer aus Einstellungen</li>
+              <li><strong>Eigenleistung (Pausch.)</strong> – Pauschalbetrag</li>
+              <li><strong>Nebenkosten</strong> – Anfahrt (Pauschale aus Einstellungen), km-Pauschale, Entsorgung etc.</li>
+            </ul>
+            <p class="mt-8">Jede Position hat: <strong>Einheit</strong> (Stück/Meter/Stunde/...), <strong>MwSt-Satz</strong> (19%/7%/0% pro Position), <strong>Rabatt</strong> (% pro Position).</p>
           </div>
         </div>
 
         <div class="guide-step">
-          <div class="guide-step-number">📦</div>
+          <div class="guide-step-number">⏱️</div>
           <div class="guide-step-content">
-            <h4>Lagerverwaltung</h4>
-            <p>Unter <strong>Lager</strong> verwaltest du deine Artikel mit EAN, Einkaufs-/Verkaufspreis und Mindestbestand. Material-Zu- und -Abgänge werden protokolliert. Entnahmen kannst du einem Projekt zuordnen.</p>
-            <p class="mt-8">Artikel mit leerem Bestand oder unter Mindestbestand werden auf dem <strong>Dashboard</strong> und in der <strong>Lager-Auswertung</strong> (Statistiken) angezeigt.</p>
+            <h4>Zeiterfassung</h4>
+            <p>Unter <strong>Zeiterfassung</strong> kannst du Arbeitszeiten pro Projekt und Mitarbeiter erfassen. Es gibt einen <strong>Live-Timer</strong> (Start/Stop) und manuelle Einträge. Wochen- und Monatsübersicht zeigen die Stunden pro Projekt.</p>
+          </div>
+        </div>
+
+        <div class="guide-step">
+          <div class="guide-step-number">🔌</div>
+          <div class="guide-step-content">
+            <h4>Prüfprotokolle (E-Check / DGUV V3)</h4>
+            <p>Unter <strong>Prüfprotokolle</strong> erstellst du digitale Prüfprotokolle für E-Checks und DGUV V3 Prüfungen. Mit Messwerten, Mängelliste, Ergebnis und <strong>digitaler Unterschrift</strong>. Die nächste Prüfung wird automatisch berechnet.</p>
+          </div>
+        </div>
+
+        <div class="guide-step">
+          <div class="guide-step-number">📷</div>
+          <div class="guide-step-content">
+            <h4>Fotos & Foto-Import</h4>
+            <p><strong>Foto-Galerie:</strong> Bei jedem Kunden und Projekt kannst du Fotos hochladen (Baustelle, Zählerkasten, Schäden). Direkt aus der Kamera oder als Datei.</p>
+            <p class="mt-8"><strong>Foto-Import (OCR):</strong> Lade ein Foto oder Screenshot hoch – die App erkennt den Text und erstellt daraus einen Kunden, ein Projekt oder einen Beleg. Ideal für die Migration von anderen Programmen.</p>
           </div>
         </div>
 
@@ -116,13 +148,30 @@ const GuideView = {
           <div class="guide-step-number">📊</div>
           <div class="guide-step-content">
             <h4>Statistiken & Auswertungen</h4>
-            <p>Unter <strong>Statistiken</strong> findest du 5 Auswertungen:</p>
-            <ul style="margin:8px 0 0 20px;color:var(--gray-600);font-size:0.9rem;line-height:1.8;">
-              <li><strong>Jahresübersicht</strong> – Monatliche Tabelle mit Angeboten, Umsatz, USt. und offenen Posten</li>
-              <li><strong>Umsatzverteilung</strong> – Diagramme nach Leistungsart, Kundentyp, Top-Kunden und Top-Artikel</li>
-              <li><strong>Projekt-Auswertung</strong> – Soll/Ist-Vergleich pro Projekt (Kalkulation vs. tatsächliche Rechnung)</li>
-              <li><strong>Offene Posten</strong> – Alle unbezahlten Rechnungen mit Fälligkeitsdatum und überfälligen Tagen</li>
-              <li><strong>Lager-Auswertung</strong> – Gesamter Lagerwert und Artikel unter Mindestbestand</li>
+            <ul style="margin:4px 0 0 20px;color:var(--gray-600);font-size:0.9rem;line-height:1.8;">
+              <li><strong>Jahresübersicht</strong> – Monatliche Tabelle mit Umsatz und offenen Posten</li>
+              <li><strong>Umsatzverteilung</strong> – Tortendiagramme nach Leistungsart, Kundentyp, Zahlungsstatus</li>
+              <li><strong>Projekt-Auswertung</strong> – Soll/Ist-Vergleich (Kalkulation vs. Rechnung)</li>
+              <li><strong>Offene Posten</strong> – Unbezahlte Rechnungen mit Überfälligkeits-Tagen</li>
+            </ul>
+            <p class="mt-8">Bei Kleinunternehmer werden MwSt-Spalten automatisch ausgeblendet.</p>
+          </div>
+        </div>
+
+        <div class="guide-step">
+          <div class="guide-step-number">⚙️</div>
+          <div class="guide-step-content">
+            <h4>Einstellungen – Was wo wirkt</h4>
+            <ul style="margin:4px 0 0 20px;color:var(--gray-600);font-size:0.9rem;line-height:1.8;">
+              <li><strong>Betriebsart</strong> (ganz oben) – Kleinunternehmer oder Regelbesteuert. Wirkt überall.</li>
+              <li><strong>Stundensätze</strong> (Meister/Geselle/Helfer) – Werden in Kalkulationen automatisch eingesetzt</li>
+              <li><strong>Anfahrt / km-Pauschale</strong> – Werden bei Nebenkosten-Positionen eingesetzt</li>
+              <li><strong>Material-Aufschlag</strong> – Für die Marge-Berechnung in Kalkulationen</li>
+              <li><strong>Skonto</strong> – Standard-Werte, pro Beleg individuell anpassbar</li>
+              <li><strong>Reverse-Charge (§13b)</strong> – Pro Beleg aktivierbar</li>
+              <li><strong>Handwerkerbonus / Gewährleistung</strong> – Erscheint automatisch auf Rechnungen</li>
+              <li><strong>DATEV-Export</strong> – Buchungsdaten für den Steuerberater</li>
+              <li><strong>Auto-Save</strong> – Speichert automatisch in eine lokale JSON-Datei (Chrome/Edge)</li>
             </ul>
           </div>
         </div>
@@ -131,35 +180,25 @@ const GuideView = {
           <div class="guide-step-number">⚡</div>
           <div class="guide-step-content">
             <h4>QR-Code auf Rechnungen</h4>
-            <p>Wenn du deine IBAN in den Einstellungen einträgst, wird auf jeder Rechnung automatisch ein <strong>GiroCode (EPC QR-Code)</strong> erzeugt. Dein Kunde scannt ihn mit seiner Banking-App und die Überweisung ist vorausgefüllt – richtige IBAN, richtiger Betrag, richtige Rechnungsnummer.</p>
-            <p class="mt-8">Alternativ kannst du auch einen eigenen QR-Code als Bild hochladen oder die Funktion deaktivieren.</p>
-          </div>
-        </div>
-
-        <div class="guide-step">
-          <div class="guide-step-number">⚙️</div>
-          <div class="guide-step-content">
-            <h4>Wichtige Einstellungen</h4>
-            <ul style="margin:4px 0 0 20px;color:var(--gray-600);font-size:0.9rem;line-height:1.8;">
-              <li><strong>Kleinunternehmer (§19 UStG)</strong> – Wenn aktiv, wird keine MwSt. ausgewiesen und ein Hinweis eingefügt</li>
-              <li><strong>Skonto</strong> – Aktiviere Skonto und setze Prozentsatz und Frist. Der Hinweis erscheint automatisch auf Rechnungen</li>
-              <li><strong>Handwerkerbonus</strong> – Zeigt den Anteil der Arbeitskosten auf der Rechnung an (§35a EStG)</li>
-              <li><strong>Nummernkreise</strong> – Die Prefixe für Dokumentnummern sind konfigurierbar (z.B. RE- statt RNG-)</li>
-            </ul>
+            <p>IBAN in Einstellungen eintragen → auf jeder Rechnung erscheint automatisch ein <strong>GiroCode</strong>. Kunde scannt → Banking-App öffnet sich → Überweisung ist vorausgefüllt.</p>
           </div>
         </div>
       </div>
 
       <!-- Tipps -->
-      <div class="card guide-section" data-keywords="tipps backup sichern datensicherung handy mobil tablet demo daten ausprobieren">
+      <div class="card guide-section" data-keywords="tipps backup sichern datensicherung handy mobil tablet demo daten ausprobieren autosave prototyp">
         <h3 class="mb-16">Wichtige Tipps</h3>
 
         <div class="guide-step">
           <div class="guide-step-number">💾</div>
           <div class="guide-step-content">
-            <h4>Regelmäßig Backup machen!</h4>
-            <p>Deine Daten werden im Browser gespeichert (IndexedDB). Wenn du den Browser-Cache löschst, sind sie weg. Geh regelmäßig zu <strong>Einstellungen → Datensicherung → Backup herunterladen</strong> und speichere die JSON-Datei sicher ab.</p>
-            <div class="guide-tip">Tipp: Mach mindestens einmal pro Woche ein Backup. Die Datei ist klein und enthält alle deine Daten.</div>
+            <h4>Daten sichern!</h4>
+            <p>Deine Daten liegen im Browser (IndexedDB). Wenn du den Cache löschst, sind sie weg. Zwei Möglichkeiten:</p>
+            <ul style="margin:8px 0 0 20px;color:var(--gray-600);font-size:0.9rem;line-height:1.8;">
+              <li><strong>Manuelles Backup:</strong> Einstellungen → Datensicherung → Backup herunterladen (mindestens 1x/Woche)</li>
+              <li><strong>Auto-Save</strong> (Chrome/Edge): Einstellungen → Datensicherung → Speicherort wählen. Danach wird bei jeder Änderung automatisch in eine JSON-Datei geschrieben.</li>
+            </ul>
+            <div class="guide-tip">Das Dashboard erinnert dich automatisch wenn dein letztes Backup älter als 7 Tage ist.</div>
           </div>
         </div>
 
@@ -167,7 +206,15 @@ const GuideView = {
           <div class="guide-step-number">📱</div>
           <div class="guide-step-content">
             <h4>Auch auf dem Handy nutzbar</h4>
-            <p>ElektroHub funktioniert auch auf dem Smartphone oder Tablet. Die Seitenleiste wird automatisch schmaler. Ideal für die Baustelle!</p>
+            <p>ElektroHub funktioniert auf Smartphone und Tablet. Die Seitenleiste wird automatisch schmaler. Fotos kannst du direkt mit der Kamera aufnehmen.</p>
+          </div>
+        </div>
+
+        <div class="guide-step">
+          <div class="guide-step-number">⚠️</div>
+          <div class="guide-step-content">
+            <h4>Prototyp-Hinweis</h4>
+            <p>ElektroHub ist aktuell ein <strong>Prototyp</strong> für Test- und Demonstrationszwecke. Berechnungen sind nicht steuerlich zertifiziert. Bitte alle Belege vor dem Versand prüfen und im Zweifel mit dem Steuerberater abstimmen.</p>
           </div>
         </div>
 

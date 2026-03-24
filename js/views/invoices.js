@@ -137,7 +137,7 @@ const InvoicesView = {
     const canConvertToAngebot = invoice.type === 'kostenvoranschlag';
     const canConvertToAB = ['angebot', 'kostenvoranschlag'].includes(invoice.type);
     const canConvertToInvoice = ['angebot', 'kostenvoranschlag', 'auftragsbestaetigung'].includes(invoice.type);
-    const canConvertToAbschlag = ['auftragsbestaetigung', 'rechnung'].includes(invoice.type);
+    const canConvertToAbschlag = ['auftragsbestaetigung', 'abschlagsrechnung'].includes(invoice.type);
     const canConvertToSchluss = ['auftragsbestaetigung', 'abschlagsrechnung'].includes(invoice.type);
     const canCreateGutschrift = INVOICE_LIKE_TYPES.includes(invoice.type) && invoice.status !== 'storniert';
     const canCreateStorno = INVOICE_LIKE_TYPES.includes(invoice.type) && invoice.status !== 'storniert';
@@ -151,7 +151,7 @@ const InvoicesView = {
       // Compute expected gross using per-position mwstRate
       const taxByRate = {};
       (invoice.positions || []).forEach(p => {
-        const rate = p.mwstRate != null ? p.mwstRate : Math.round(MWST_RATE * 100);
+        const rate = p.mwstRate != null ? p.mwstRate : M.round2(MWST_RATE * 100);
         taxByRate[rate] = (taxByRate[rate] || 0) + (p.total || 0) * (rate / 100);
       });
       const totalTax = Object.values(taxByRate).reduce((s, v) => s + v, 0);
@@ -360,8 +360,8 @@ const InvoicesView = {
           })()}
           <div class="calc-summary-row total"><span>${isKU ? 'Rechnungsbetrag' : 'Brutto'}</span><span>${formatCurrency(invoice.totalGross)}</span></div>
           ${invoice.skontoEnabled && invoice.skontoRate > 0 && dt.canSkonto ? (() => {
-            const sb = Math.round(invoice.totalGross * (invoice.skontoRate / 100) * 100) / 100;
-            const ns = Math.round((invoice.totalGross - sb) * 100) / 100;
+            const sb = M.skonto(invoice.totalGross, invoice.skontoRate);
+            const ns = M.sub(invoice.totalGross, sb);
             const sd = invoice.date && invoice.skontoFrist ? formatDate(calcDueDate(invoice.date, invoice.skontoFrist)) : '–';
             return `
             <div class="calc-summary-row mt-8" style="font-size:0.85rem;color:var(--gray-500);">
@@ -471,7 +471,7 @@ const InvoicesView = {
       // Skonto (für alle Typen wo aktiviert)
       if (invoice.skontoEnabled && invoice.skontoRate > 0) {
         const skontoBetrag = calcSkonto(invoice.totalGross, invoice.skontoRate);
-        const nachSkonto = Math.round((invoice.totalGross - skontoBetrag) * 100) / 100;
+        const nachSkonto = M.sub(invoice.totalGross, skontoBetrag);
         let skontoDatum = '';
         if (invoice.date && invoice.skontoFrist) {
           skontoDatum = formatDate(calcDueDate(invoice.date, invoice.skontoFrist));
@@ -511,7 +511,7 @@ const InvoicesView = {
     if (settings.showHandwerkerbonus && dt.hasPayment && invoice.positions) {
       const arbeitskosten = calcArbeitskosten(invoice.positions);
       if (arbeitskosten > 0) {
-        const arbeitskostenBrutto = isKU ? arbeitskosten : Math.round(arbeitskosten * (1 + MWST_RATE) * 100) / 100;
+        const arbeitskostenBrutto = isKU ? arbeitskosten : M.netToGross(arbeitskosten, MWST_RATE * 100);
         handwerkerbonusHtml2 = `
           <div style="margin-top:12px;font-size:8.5pt;color:#065f46;padding:8px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:4px;">
             <strong>Hinweis gemäß § 35a EStG:</strong> Der Anteil der Arbeitskosten (inkl. Fahrtkosten) beträgt ${formatCurrency(arbeitskostenBrutto)} (brutto). Davon können 20 % (max. 1.200 €/Jahr) steuerlich geltend gemacht werden.
@@ -640,6 +640,8 @@ const InvoicesView = {
         <!-- Positionen -->
         ${positionsHtml}
 
+        <!-- Alles ab hier zusammenhalten (nicht auf 2 Seiten verteilen) -->
+        <div class="invoice-bottom-block">
         <!-- Zahlungsbedingungen (Skonto, Fälligkeit, Bankdaten) -->
         <div class="zahlungs-block">${zahlungHtml}</div>
 
@@ -660,6 +662,7 @@ const InvoicesView = {
 
         <!-- AGB-Hinweis -->
         ${settings.agbEnabled && settings.agbText ? `<div style="margin-top:20px;font-size:8.5pt;color:#555;font-style:italic;">${escapeHtml(settings.agbText)}</div>` : ''}
+        </div>
 
         <!-- Fußzeile: Pflichtangaben -->
         <div class="footer-block" style="margin-top:40px;padding-top:12px;border-top:1px solid #ddd;font-size:7.5pt;color:#999;line-height:1.6;">
@@ -1085,30 +1088,18 @@ const InvoicesView = {
       invoice.positions = InvoicesView._collectFormPositions()
         .filter(p => p.description.trim() || p.total > 0); // Leere Zeilen entfernen
 
-      // Berechnung: Positionen → Netto → MwSt pro Satz → Brutto
-      // 1. Jede Position: Menge × Einzelpreis × (1 - discount/100)
+      // Berechnung mit Big.js Präzision
+      // 1. Jede Position: Menge × Preis × (1 - Rabatt/100)
       invoice.positions.forEach((p, i) => {
         p.pos = i + 1;
-        const discountFactor = 1 - ((p.discount || 0) / 100);
-        p.total = Math.round((p.quantity || 0) * (p.unitPrice || 0) * discountFactor * 100) / 100;
+        p.total = M.posTotal(p.quantity, p.unitPrice, p.discount);
       });
-      // 2. Netto = Summe aller Positions-Totals
-      invoice.totalNet = Math.round(invoice.positions.reduce((s, p) => s + p.total, 0) * 100) / 100;
-      // 3. Brutto = Netto + MwSt grouped by rate (oder = Netto bei Kleinunternehmer)
+      // 2. Netto = Summe aller Positionen
+      invoice.totalNet = M.sum(invoice.positions.map(p => p.total));
+      // 3. Brutto = mit MwSt pro Position (Big.js)
       const isKU = await isKleinunternehmer();
-      if (isKU) {
-        invoice.totalTax = 0;
-        invoice.totalGross = invoice.totalNet;
-      } else {
-        // Group by mwstRate
-        const taxByRate = {};
-        invoice.positions.forEach(p => {
-          const rate = p.mwstRate != null ? p.mwstRate : 19;
-          taxByRate[rate] = (taxByRate[rate] || 0) + p.total * (rate / 100);
-        });
-        invoice.totalTax = Math.round(Object.values(taxByRate).reduce((s, v) => s + v, 0) * 100) / 100;
-        invoice.totalGross = Math.round((invoice.totalNet + invoice.totalTax) * 100) / 100;
-      }
+      invoice.totalGross = M.grossFromPositions(invoice.positions, isKU);
+      invoice.totalTax = M.sub(invoice.totalGross, invoice.totalNet);
       invoice.kleinunternehmer = isKU;
 
       // Skonto pro Beleg
@@ -1166,7 +1157,7 @@ const InvoicesView = {
     const mwst = prefill?.mwstRate != null ? prefill.mwstRate : 19;
     const discount = prefill?.discount || 0;
     const discountFactor = 1 - (discount / 100);
-    const total = Math.round(qty * price * discountFactor * 100) / 100;
+    const total = M.posTotal(qty, price, discount);
 
     const unitOpts = UNITS.map(u =>
       `<option value="${u}" ${u === unit ? 'selected' : ''}>${escapeHtml(u)}</option>`
@@ -1256,7 +1247,7 @@ const InvoicesView = {
       const discountEl = row.querySelector('[name="pos-discount"]');
       const discount = discountEl ? (parseFloat(discountEl.value) || 0) : 0;
       const discountFactor = 1 - (discount / 100);
-      const total = Math.round(quantity * unitPrice * discountFactor * 100) / 100;
+      const total = M.posTotal(quantity, unitPrice, discount);
       return { pos: i + 1, description, unit, quantity, unitPrice, mwstRate, discount, total };
     });
   },
@@ -1268,20 +1259,18 @@ const InvoicesView = {
         row.querySelector('.pos-total').textContent = formatCurrency(positions[i].total);
       }
     });
-    const net = positions.reduce((s, p) => s + p.total, 0);
-
-    // Group tax by rate
+    // Big.js Präzision für Preview
+    const net = M.sum(positions.map(p => p.total));
     const taxByRate = {};
     positions.forEach(p => {
       const rate = p.mwstRate != null ? p.mwstRate : 19;
-      taxByRate[rate] = (taxByRate[rate] || 0) + p.total * (rate / 100);
+      taxByRate[rate] = M.add(taxByRate[rate] || 0, M.tax(p.total, rate));
     });
-    const totalTax = Object.values(taxByRate).reduce((s, v) => s + v, 0);
-    const gross = net + totalTax;
+    const totalTax = M.sum(Object.values(taxByRate));
+    const gross = M.add(net, totalTax);
 
     document.getElementById('inv-form-net').textContent = formatCurrency(net);
 
-    // Build tax rows grouped by rate
     const taxRowsEl = document.getElementById('inv-form-tax-rows');
     if (taxRowsEl) {
       const rates = Object.keys(taxByRate).map(Number).sort((a, b) => b - a);
@@ -1292,14 +1281,13 @@ const InvoicesView = {
 
     document.getElementById('inv-form-gross').textContent = formatCurrency(gross);
 
-    // Skonto aktualisieren
     const skontoEl = document.getElementById('inv-form-skonto');
     const skontoCheck = document.querySelector('[name="skontoEnabled"]');
     const skontoRateInput = document.querySelector('[name="skontoRate"]');
     if (skontoEl && skontoCheck && skontoRateInput) {
       if (skontoCheck.checked) {
         const rate = parseFloat(skontoRateInput.value) || 0;
-        skontoEl.textContent = formatCurrency(gross * (1 - rate / 100));
+        skontoEl.textContent = formatCurrency(M.sub(gross, M.skonto(gross, rate)));
       } else {
         skontoEl.textContent = '–';
       }
@@ -1361,7 +1349,7 @@ const InvoicesView = {
       type: docType,
       status: 'entwurf',
       date: todayISO(),
-      dueDate: docType === 'angebot' || docType === 'kostenvoranschlag' ? calcDueDate(todayISO(), 30) : null,
+      dueDate: getDocType(docType).hasPayment ? calcDueDate(todayISO(), defaultPaymentDays) : (['angebot', 'kostenvoranschlag'].includes(docType) ? calcDueDate(todayISO(), 30) : null),
       projectId: project.id,
       projectTitle: project.title,
       customerName,
@@ -1459,16 +1447,16 @@ const InvoicesView = {
         d.status === 'bezahlt'
       );
       if (abschlaege.length > 0) {
-        const abschlagSummeNet = Math.round(abschlaege.reduce((s, a) => s + (a.totalNet || 0), 0) * 100) / 100;
-        const abschlagSummeGross = Math.round(abschlaege.reduce((s, a) => s + (a.totalGross || 0), 0) * 100) / 100;
+        const abschlagSummeNet = M.sum(abschlaege.map(a => a.totalNet || 0));
+        const abschlagSummeGross = M.sum(abschlaege.map(a => a.totalGross || 0));
         newDoc.abschlaege = abschlaege.map(a => ({
           number: a.number, date: a.date, totalNet: a.totalNet, totalGross: a.totalGross,
         }));
         newDoc.abschlagSummeNet = abschlagSummeNet;
         newDoc.abschlagSummeGross = abschlagSummeGross;
         // Restbetrag berechnen
-        newDoc.restNet = Math.round(((newDoc.totalNet || 0) - abschlagSummeNet) * 100) / 100;
-        newDoc.restGross = Math.round(((newDoc.totalGross || 0) - abschlagSummeGross) * 100) / 100;
+        newDoc.restNet = M.sub(newDoc.totalNet || 0, abschlagSummeNet);
+        newDoc.restGross = M.sub(newDoc.totalGross || 0, abschlagSummeGross);
         newDoc.notes = (newDoc.notes || '') +
           `\n\nBereits geleistete Abschlagszahlungen:\n` +
           abschlaege.map(a => `  ${a.number} vom ${formatDate(a.date)}: ${formatCurrency(a.totalGross)}`).join('\n') +
@@ -1635,8 +1623,8 @@ const InvoicesView = {
   },
 
   _skontoPreviewText(gross, rate, frist, dateStr) {
-    const betrag = Math.round(gross * (rate / 100) * 100) / 100;
-    const nach = Math.round((gross - betrag) * 100) / 100;
+    const betrag = M.skonto(gross, rate);
+    const nach = M.sub(gross, betrag);
     const bis = dateStr && frist ? formatDate(calcDueDate(dateStr, frist)) : '–';
     return `Bei Zahlung bis <strong>${bis}</strong>: <strong>${rate}%</strong> Skonto = <strong>${formatCurrency(betrag)}</strong> Abzug.<br>Kunde zahlt dann: <strong>${formatCurrency(nach)}</strong>`;
   },
@@ -1668,14 +1656,8 @@ const InvoicesView = {
       invoice.totalTax = 0;
       invoice.totalGross = invoice.totalNet;
     } else {
-      // Group by per-position mwstRate
-      const taxByRate = {};
-      (invoice.positions || []).forEach(p => {
-        const rate = p.mwstRate != null ? p.mwstRate : 19;
-        taxByRate[rate] = (taxByRate[rate] || 0) + (p.total || 0) * (rate / 100);
-      });
-      invoice.totalTax = Math.round(Object.values(taxByRate).reduce((s, v) => s + v, 0) * 100) / 100;
-      invoice.totalGross = Math.round((invoice.totalNet + invoice.totalTax) * 100) / 100;
+      invoice.totalGross = M.grossFromPositions(invoice.positions || [], false);
+      invoice.totalTax = M.sub(invoice.totalGross, invoice.totalNet);
     }
     invoice.kleinunternehmer = isKU;
     invoice.updatedAt = new Date().toISOString();
@@ -1712,29 +1694,49 @@ const InvoicesView = {
       <head>
         <title>${dt.label} ${invoice.number}</title>
         <style>
+          @page {
+            size: A4;
+            margin: 15mm 18mm 20mm 18mm;
+          }
           body {
-            margin: 15mm 20mm;
+            margin: 0;
             font-family: Arial, sans-serif;
             font-size: 10pt;
             color: #333;
           }
-          @media print {
-            body { margin: 10mm 15mm; }
-          }
-          /* Seitenumbruch-Regeln */
-          table { page-break-inside: auto; }
+
+          /* Tabellen: Zeilen nicht trennen, Header auf jeder Seite */
+          table { page-break-inside: auto; width: 100%; border-collapse: collapse; }
           tr { page-break-inside: avoid; page-break-after: auto; }
           thead { display: table-header-group; }
-          /* Zusammengehörige Blöcke nicht trennen */
+
+          /* Alles ab Summenblock bis Ende = ein Block.
+             Wenn es nicht mehr auf die Seite passt, kommt alles auf die nächste. */
+          .invoice-bottom-block {
+            page-break-inside: avoid;
+            page-break-before: auto;
+          }
+
+          /* Einzelne Blöcke nie trennen */
           .zahlungs-block, .qr-block, .footer-block {
             page-break-inside: avoid;
           }
-          /* Summenblock immer zusammen */
+
+          /* Summenblock (Netto/MwSt/Brutto) zusammenhalten */
           div[style*="margin-left:auto"] {
             page-break-inside: avoid;
           }
-          /* Bilder nicht brechen */
+
+          /* Bilder (Logo, QR) nicht brechen */
           img { page-break-inside: avoid; }
+
+          /* Fußzeile: immer am unteren Rand der letzten Seite */
+          .footer-block {
+            margin-top: auto;
+          }
+
+          /* Orphan/Widow: mindestens 3 Zeilen vor/nach Seitenumbruch */
+          p, div { orphans: 3; widows: 3; }
         </style>
       </head>
       <body>

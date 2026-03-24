@@ -45,6 +45,7 @@ const SettingsView = {
 
     const defaultHourlyRateMeister = await db.getSetting('defaultHourlyRateMeister', 55);
     const defaultHourlyRateGeselle = await db.getSetting('defaultHourlyRateGeselle', 45);
+    const defaultHourlyRateHelfer = await db.getSetting('defaultHourlyRateHelfer', 25);
     const defaultMarkup = await db.getSetting('defaultMarkup', 15);
     const defaultAnfahrt = await db.getSetting('defaultAnfahrt', 35);
     const kmPauschale = await db.getSetting('kmPauschale', 0.52);
@@ -531,21 +532,34 @@ const SettingsView = {
           <span class="setup-number">7</span>
           <div>
             <h3>Kalkulationseinstellungen</h3>
-            <p class="text-muted text-small">Standardwerte für neue Kalkulationen</p>
+            <p class="text-muted text-small">Diese Werte werden automatisch in neue Kalkulationen eingesetzt</p>
           </div>
         </div>
         <div class="setup-body">
+          <div class="info-box mb-16" style="font-size:0.88rem;line-height:1.6;">
+            <strong>So werden diese Werte verwendet:</strong><br>
+            • <strong>Stundensätze</strong> → Werden automatisch eingesetzt wenn du in der Kalkulation „Meister/Geselle/Helfer (Std.)" als Typ wählst<br>
+            • <strong>Anfahrtspauschale / km-Pauschale</strong> → Werden bei Nebenkosten-Positionen mit Anfahrt/km eingesetzt<br>
+            • <strong>Material-Aufschlag</strong> → Wird für die Kostenberechnung (Marge) verwendet: EK-Preis = VK-Preis ÷ (1 + Aufschlag%)<br>
+            • <strong>Gewinnaufschlag</strong> → Ziel-Marge für die Projekt-Auswertung (Soll/Ist-Vergleich)<br>
+            Alle Werte sind Vorschläge – du kannst sie in jeder Kalkulation ändern.
+          </div>
           <form id="settings-calc-form">
-            <div class="form-row">
+            <div class="form-row-3">
               <div class="form-group">
                 <label>Stundensatz Meister (€/Std)</label>
                 <input type="number" name="defaultHourlyRateMeister" step="0.5" min="0" value="${defaultHourlyRateMeister}">
-                ${presetChips('defaultHourlyRateMeister', [45, 50, 55, 60, 65], ' €')}
+                ${presetChips('defaultHourlyRateMeister', [50, 55, 60, 65], ' €')}
               </div>
               <div class="form-group">
                 <label>Stundensatz Geselle (€/Std)</label>
                 <input type="number" name="defaultHourlyRateGeselle" step="0.5" min="0" value="${defaultHourlyRateGeselle}">
                 ${presetChips('defaultHourlyRateGeselle', [35, 40, 45, 50], ' €')}
+              </div>
+              <div class="form-group">
+                <label>Stundensatz Helfer (€/Std)</label>
+                <input type="number" name="defaultHourlyRateHelfer" step="0.5" min="0" value="${defaultHourlyRateHelfer}">
+                ${presetChips('defaultHourlyRateHelfer', [20, 25, 30, 35], ' €')}
               </div>
             </div>
             <div class="form-row">
@@ -861,7 +875,7 @@ const SettingsView = {
 
           let draftCount = 0;
           for (const inv of drafts) {
-            const shouldBe = isKU ? inv.totalNet : inv.totalNet * (1 + MWST_RATE);
+            const shouldBe = isKU ? inv.totalNet : M.netToGross(inv.totalNet, MWST_RATE * 100);
             if (Math.abs((inv.totalGross || 0) - shouldBe) > 0.01) {
               inv.totalGross = shouldBe;
               inv.kleinunternehmer = isKU;
@@ -874,7 +888,7 @@ const SettingsView = {
           // Prüfe ob versendete Belege betroffen sind
           let sentMismatch = 0;
           for (const inv of sent) {
-            const shouldBe = isKU ? inv.totalNet : inv.totalNet * (1 + MWST_RATE);
+            const shouldBe = isKU ? inv.totalNet : M.netToGross(inv.totalNet, MWST_RATE * 100);
             if (Math.abs((inv.totalGross || 0) - shouldBe) > 0.01) {
               sentMismatch++;
             }
@@ -899,6 +913,7 @@ const SettingsView = {
           const fd = new FormData(e.target);
           await db.setSetting('defaultHourlyRateMeister', parseFloat(fd.get('defaultHourlyRateMeister')) || 55);
           await db.setSetting('defaultHourlyRateGeselle', parseFloat(fd.get('defaultHourlyRateGeselle')) || 45);
+          await db.setSetting('defaultHourlyRateHelfer', parseFloat(fd.get('defaultHourlyRateHelfer')) || 25);
           await db.setSetting('defaultMarkup', parseFloat(fd.get('defaultMarkup')) || 15);
           await db.setSetting('defaultAnfahrt', parseFloat(fd.get('defaultAnfahrt')) || 35);
           await db.setSetting('kmPauschale', parseFloat(fd.get('kmPauschale')) || 0.52);
@@ -1140,14 +1155,7 @@ const SettingsView = {
         if (newMode) {
           newGross = inv.totalNet;
         } else {
-          const taxByRate = {};
-          positions.forEach(p => {
-            const rate = p.mwstRate != null ? p.mwstRate : 19;
-            const posNet = (p.total || 0);
-            taxByRate[rate] = (taxByRate[rate] || 0) + posNet * (rate / 100);
-          });
-          const totalTax = Object.values(taxByRate).reduce((s, v) => s + v, 0);
-          newGross = Math.round((inv.totalNet + totalTax) * 100) / 100;
+          newGross = M.grossFromPositions(positions, false);
         }
         if (Math.abs((inv.totalGross || 0) - newGross) > 0.01) {
           inv.totalGross = newGross;
@@ -1279,14 +1287,7 @@ const SettingsView = {
     const isKU = await db.getSetting('kleinunternehmer', false);
     const currentMwst = await db.getSetting('mwstRate', 19);
     const calcGross = (net, positions) => {
-      if (isKU) return net;
-      let tax = 0;
-      (positions || []).forEach(p => {
-        const rate = p.mwstRate != null ? p.mwstRate : currentMwst;
-        const df = 1 - ((p.discount || 0) / 100);
-        tax += (p.quantity || 0) * (p.unitPrice || 0) * df * (rate / 100);
-      });
-      return Math.round((net + tax) * 100) / 100;
+      return M.grossFromPositions(positions || [], isKU);
     };
 
     const customers = [
@@ -1318,29 +1319,42 @@ const SettingsView = {
       { id: 'demo-a8', name: 'Kabelkanal 40x60 2m weiß', ean: '4055667788990', supplier: 'Rexel', purchasePrice: 4.50, salePrice: 7.50, stock: 0, minStock: 10, location: 'Regal A3', createdAt: '2026-01-01T10:00:00Z' },
     ];
 
+    const mwst = isKU ? 0 : 19;
     const calcPositions = [
-      { type: 'material', description: 'NYM-J 3x1,5mm² (3 Ringe)', unit: 'Rolle', quantity: 3, unitPrice: 115.00, mwstRate: 19, discount: 0, total: 345.00, cost: 267.00 },
-      { type: 'material', description: 'NYM-J 5x2,5mm² (2 Ringe)', unit: 'Rolle', quantity: 2, unitPrice: 220.00, mwstRate: 19, discount: 0, total: 440.00, cost: 350.00 },
-      { type: 'material', description: 'Schalterdosen UP (80 Stk)', unit: 'Stück', quantity: 80, unitPrice: 0.60, mwstRate: 19, discount: 0, total: 48.00, cost: 28.00 },
-      { type: 'material', description: 'Steckdosen Berker S.1', unit: 'Stück', quantity: 40, unitPrice: 5.80, mwstRate: 19, discount: 0, total: 232.00, cost: 128.00 },
-      { type: 'material', description: 'FI/LS B16 30mA', unit: 'Stück', quantity: 6, unitPrice: 48.00, mwstRate: 19, discount: 0, total: 288.00, cost: 192.00 },
-      { type: 'material', description: 'Zählerschrank 3-reihig', unit: 'Stück', quantity: 1, unitPrice: 280.00, mwstRate: 19, discount: 0, total: 280.00, cost: 185.00 },
-      { type: 'stunden', description: 'Elektroinstallation komplett', unit: 'Stunde', quantity: 48, unitPrice: 55.00, mwstRate: 19, discount: 0, total: 2640.00, cost: 0 },
-      { type: 'pauschale', description: 'Zählerschrankumbau', unit: 'Pauschal', quantity: 1, unitPrice: 350.00, mwstRate: 19, discount: 0, total: 350.00, cost: 0 },
-      { type: 'nebenkosten', description: 'Anfahrt (5 Tage)', unit: 'Pauschal', quantity: 5, unitPrice: 35.00, mwstRate: 19, discount: 0, total: 175.00, cost: 0 },
+      { type: 'material', description: 'NYM-J 3x1,5mm² verlegen (UP), inkl. Schlitz', unit: 'Meter', quantity: 120, unitPrice: 4.50, mwstRate: mwst, discount: 0, total: 540.00, cost: 378.00 },
+      { type: 'material', description: 'NYM-J 5x2,5mm² verlegen (UP)', unit: 'Meter', quantity: 60, unitPrice: 6.80, mwstRate: mwst, discount: 0, total: 408.00, cost: 285.60 },
+      { type: 'material', description: 'Steckdose setzen (UP), inkl. Dose, Rahmen, Einsatz', unit: 'Stück', quantity: 40, unitPrice: 5.80, mwstRate: mwst, discount: 0, total: 232.00, cost: 128.00 },
+      { type: 'material', description: 'Lichtschalter setzen (UP)', unit: 'Stück', quantity: 16, unitPrice: 5.20, mwstRate: mwst, discount: 0, total: 83.20, cost: 51.20 },
+      { type: 'material', description: 'FI/LS B16 30mA', unit: 'Stück', quantity: 8, unitPrice: 48.00, mwstRate: mwst, discount: 0, total: 384.00, cost: 256.00 },
+      { type: 'material', description: 'Zählerschrank 3-reihig, inkl. Bestückung', unit: 'Stück', quantity: 1, unitPrice: 680.00, mwstRate: mwst, discount: 0, total: 680.00, cost: 476.00 },
+      { type: 'stunden', description: 'Meister – Elektroinstallation', unit: 'Stunde', quantity: 24, unitPrice: 55.00, mwstRate: mwst, discount: 0, total: 1320.00, cost: 0 },
+      { type: 'stunden_geselle', description: 'Geselle – Montage und Verkabelung', unit: 'Stunde', quantity: 40, unitPrice: 45.00, mwstRate: mwst, discount: 0, total: 1800.00, cost: 0 },
+      { type: 'stunden_helfer', description: 'Helfer – Schlitze stemmen, Zuarbeit', unit: 'Stunde', quantity: 16, unitPrice: 25.00, mwstRate: mwst, discount: 0, total: 400.00, cost: 0 },
+      { type: 'pauschale', description: 'Zählerschrankumbau', unit: 'Pauschal', quantity: 1, unitPrice: 350.00, mwstRate: mwst, discount: 0, total: 350.00, cost: 0 },
+      { type: 'nebenkosten', description: 'Anfahrtspauschale (bis 25 km)', unit: 'Pauschal', quantity: 8, unitPrice: 35.00, mwstRate: mwst, discount: 0, total: 280.00, cost: 0 },
+      { type: 'nebenkosten', description: 'Kleinmaterialpauschale', unit: 'Pauschal', quantity: 1, unitPrice: 85.00, mwstRate: mwst, discount: 0, total: 85.00, cost: 0 },
     ];
+    const calcNet1 = M.sum(calcPositions.map(p => p.total));
+    const calcCost1 = M.sum(calcPositions.map(p => p.cost || 0));
+
     const calcPositionsRichter = [
-      { type: 'material', description: 'Elektroinstallation Büroetage komplett', unit: 'Pauschal', quantity: 1, unitPrice: 8500.00, mwstRate: isKU ? 0 : 19, discount: 0, total: 8500.00, cost: 5100.00 },
-      { type: 'material', description: 'Netzwerkverkabelung Cat7', unit: 'Stück', quantity: 8, unitPrice: 85.00, mwstRate: isKU ? 0 : 19, discount: 0, total: 680.00, cost: 340.00 },
-      { type: 'material', description: 'LED-Einbaustrahler', unit: 'Stück', quantity: 32, unitPrice: 45.00, mwstRate: isKU ? 0 : 19, discount: 0, total: 1440.00, cost: 912.00 },
-      { type: 'nebenkosten', description: 'Anfahrt', unit: 'Pauschal', quantity: 10, unitPrice: 35.00, mwstRate: isKU ? 0 : 19, discount: 0, total: 350.00, cost: 0 },
+      { type: 'material', description: 'Elektroinstallation Büroetage komplett', unit: 'Pauschal', quantity: 1, unitPrice: 8500.00, mwstRate: mwst, discount: 0, total: 8500.00, cost: 5100.00 },
+      { type: 'material', description: 'Netzwerkverkabelung Cat7 (8 Doppeldosen)', unit: 'Stück', quantity: 8, unitPrice: 85.00, mwstRate: mwst, discount: 0, total: 680.00, cost: 340.00 },
+      { type: 'material', description: 'LED-Einbaustrahler', unit: 'Stück', quantity: 32, unitPrice: 45.00, mwstRate: mwst, discount: 5, total: M.posTotal(32, 45, 5), cost: 912.00 },
+      { type: 'stunden', description: 'Meister – Planung und Abnahme', unit: 'Stunde', quantity: 8, unitPrice: 55.00, mwstRate: mwst, discount: 0, total: 440.00, cost: 0 },
+      { type: 'stunden_geselle', description: 'Geselle – Installation', unit: 'Stunde', quantity: 48, unitPrice: 45.00, mwstRate: mwst, discount: 0, total: 2160.00, cost: 0 },
+      { type: 'nebenkosten', description: 'Anfahrtspauschale', unit: 'Pauschal', quantity: 10, unitPrice: 35.00, mwstRate: mwst, discount: 0, total: 350.00, cost: 0 },
+      { type: 'nebenkosten', description: 'Entsorgung Altmaterial', unit: 'Pauschal', quantity: 1, unitPrice: 120.00, mwstRate: mwst, discount: 0, total: 120.00, cost: 0 },
     ];
+    const calcNet2 = M.sum(calcPositionsRichter.map(p => p.total));
+    const calcCost2 = M.sum(calcPositionsRichter.map(p => p.cost || 0));
     const calculations = [
-      { id: 'demo-c1', projectId: 'demo-p1', title: 'Hauptkalkulation EG+OG', positions: calcPositions, totalNet: 4798.00, totalCost: 1150.00, createdAt: '2026-01-20T10:00:00Z' },
-      { id: 'demo-c2', projectId: 'demo-p6', title: 'Kalkulation Büroausbau', positions: calcPositionsRichter, totalNet: 10970.00, totalCost: 6352.00, createdAt: '2026-01-08T10:00:00Z' },
+      { id: 'demo-c1', projectId: 'demo-p1', title: 'Hauptkalkulation EG+OG', positions: calcPositions, totalNet: calcNet1, totalCost: calcCost1, createdAt: '2026-01-20T10:00:00Z' },
+      { id: 'demo-c2', projectId: 'demo-p6', title: 'Kalkulation Büroausbau', positions: calcPositionsRichter, totalNet: calcNet2, totalCost: calcCost2, createdAt: '2026-01-08T10:00:00Z' },
     ];
 
-    const invPos = calcPositions.map(p => ({ description: p.description, quantity: p.quantity, unit: p.unit, unitPrice: p.unitPrice, mwstRate: isKU ? 0 : (p.mwstRate || 19), discount: 0, total: p.total, type: p.type }));
+    const invPos = calcPositions.map(p => ({ description: p.description, quantity: p.quantity, unit: p.unit, unitPrice: p.unitPrice, mwstRate: mwst, discount: p.discount || 0, total: p.total, type: p.type }));
+    const invPosRichter = calcPositionsRichter.map(p => ({ description: p.description, quantity: p.quantity, unit: p.unit, unitPrice: p.unitPrice, mwstRate: mwst, discount: p.discount || 0, total: p.total, type: p.type }));
 
     const kvPositions = [
       { description: 'LED-Panel 60x60 40W', unit: 'Stück', quantity: 16, unitPrice: 45.00, mwstRate: isKU ? 0 : 19, discount: 0, total: 720.00 },
@@ -1349,26 +1363,13 @@ const SettingsView = {
       { description: 'Anfahrt', unit: 'Pauschal', quantity: 3, unitPrice: 35.00, mwstRate: isKU ? 0 : 19, discount: 0, total: 105.00 },
     ];
 
-    const lsPositions = [
-      { description: 'NYM-J 5x2,5mm² (1 Ring)', unit: 'Rolle', quantity: 1, unitPrice: 220.00, mwstRate: isKU ? 0 : 19, discount: 0, total: 220.00 },
-      { description: 'Herdanschlussdose 5-polig', unit: 'Stück', quantity: 1, unitPrice: 12.50, mwstRate: isKU ? 0 : 19, discount: 0, total: 12.50 },
-      { description: 'FI/LS B16 30mA', unit: 'Stück', quantity: 1, unitPrice: 48.00, mwstRate: isKU ? 0 : 19, discount: 0, total: 48.00 },
-    ];
-
-    const rePositions = [
-      { description: 'Komplette Elektroinstallation Büroetage', unit: 'Pauschal', quantity: 1, unitPrice: 8500.00, mwstRate: isKU ? 0 : 19, discount: 0, total: 8500.00 },
-      { description: 'Netzwerkverkabelung Cat7 (8 Doppeldosen)', unit: 'Stück', quantity: 8, unitPrice: 85.00, mwstRate: isKU ? 0 : 19, discount: 0, total: 680.00 },
-      { description: 'LED-Einbaustrahler', unit: 'Stück', quantity: 32, unitPrice: 45.00, mwstRate: isKU ? 0 : 19, discount: 5, total: 1368.00 },
-      { description: 'Anfahrt', unit: 'Pauschal', quantity: 10, unitPrice: 35.00, mwstRate: isKU ? 0 : 19, discount: 0, total: 350.00 },
-    ];
-
     const invoices = [
       // Projekt 1: Komplette Kette AG → AB → RE (mit Skonto)
       {
         id: 'demo-i1', number: 'AG-2026-0001', type: 'angebot', status: 'gesendet',
         date: '2026-01-22', dueDate: '2026-02-21', projectId: 'demo-p1', projectTitle: 'Elektroinstallation Neubau Weber',
         customerName: 'Herr Thomas Weber', customerAddress: 'Musterstraße 12\n53111 Bonn',
-        positions: invPos, totalNet: 4798.00, totalGross: calcGross(4798, invPos),
+        positions: invPos, totalNet: calcNet1, totalGross: calcGross(calcNet1, invPos),
         kleinunternehmer: isKU,
         skontoEnabled: true, skontoRate: 2, skontoFrist: 10,
         createdAt: '2026-01-22T10:00:00Z',
@@ -1377,7 +1378,7 @@ const SettingsView = {
         id: 'demo-i2', number: 'AB-2026-0001', type: 'auftragsbestaetigung', status: 'gesendet',
         date: '2026-02-01', projectId: 'demo-p1', projectTitle: 'Elektroinstallation Neubau Weber',
         customerName: 'Herr Thomas Weber', customerAddress: 'Musterstraße 12\n53111 Bonn',
-        positions: invPos, totalNet: 4798.00, totalGross: calcGross(4798, invPos),
+        positions: invPos, totalNet: calcNet1, totalGross: calcGross(calcNet1, invPos),
         kleinunternehmer: isKU,
         skontoEnabled: true, skontoRate: 2, skontoFrist: 10,
         basedOnId: 'demo-i1', createdAt: '2026-02-01T10:00:00Z',
@@ -1387,7 +1388,7 @@ const SettingsView = {
         date: '2026-03-10', dueDate: '2026-03-24', serviceFrom: '2026-02-01', serviceTo: '2026-03-08',
         projectId: 'demo-p1', projectTitle: 'Elektroinstallation Neubau Weber',
         customerName: 'Herr Thomas Weber', customerAddress: 'Musterstraße 12\n53111 Bonn',
-        positions: invPos, totalNet: 4798.00, totalGross: calcGross(4798, invPos),
+        positions: invPos, totalNet: calcNet1, totalGross: calcGross(calcNet1, invPos),
         kleinunternehmer: isKU,
         skontoEnabled: true, skontoRate: 2, skontoFrist: 10,
         basedOnId: 'demo-i2', createdAt: '2026-03-10T10:00:00Z',
@@ -1403,25 +1404,15 @@ const SettingsView = {
         createdAt: '2026-02-12T10:00:00Z',
       },
 
-      // Projekt 3: Lieferschein (Bäckerei)
-      {
-        id: 'demo-i5', number: 'LS-2026-0001', type: 'lieferschein', status: 'gesendet',
-        date: '2026-03-08', projectId: 'demo-p3', projectTitle: 'Starkstromanschluss Backofen',
-        customerName: 'Herr Klaus Hoffmann', customerAddress: 'Hauptstr. 78\n50667 Köln',
-        positions: lsPositions, totalNet: 280.50, totalGross: calcGross(280.50, lsPositions),
-        kleinunternehmer: isKU,
-        createdAt: '2026-03-08T10:00:00Z',
-      },
-
       // Projekt 6: Bezahlte Rechnung (Richter Bau, abgeschlossen)
       {
         id: 'demo-i6', number: 'RE-2026-0002', type: 'rechnung', status: 'bezahlt',
         date: '2026-02-28', dueDate: '2026-03-14', serviceFrom: '2026-01-10', serviceTo: '2026-02-28',
         projectId: 'demo-p6', projectTitle: 'Büroausbau Richter Bau',
         customerName: 'Herr Stefan Richter', customerAddress: 'Gewerbepark 15a\n30659 Hannover',
-        positions: rePositions, totalNet: 10898.00, totalGross: calcGross(10898, rePositions),
+        positions: invPosRichter, totalNet: calcNet2, totalGross: calcGross(calcNet2, invPosRichter),
         kleinunternehmer: isKU,
-        paidDate: '2026-03-10', paidAmount: calcGross(10898, rePositions),
+        paidDate: '2026-03-10', paidAmount: calcGross(calcNet2, invPosRichter),
         skontoEnabled: false,
         createdAt: '2026-02-28T10:00:00Z',
       },
