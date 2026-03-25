@@ -1,18 +1,86 @@
 {
-  "name": "elektrohub-main",
-  "version": "1.0.0",
-  "main": "index.js",
-  "directories": {
-    "test": "tests"
-  },
+  "name": "elektrohub",
+  "version": "2.1.0",
+  "description": "ElektroHub – Verwaltungssoftware für Elektro-Fachbetriebe",
+  "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "electron .",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:publish": "electron-builder --win --publish always",
+    "test": "node tests/run-node.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "author": "M-FLEX Energie und Gebäudetechnik",
+  "license": "UNLICENSED",
+  "private": true,
   "dependencies": {
-    "big.js": "^7.0.1"
+    "big.js": "^7.0.1",
+    "electron-updater": "^6.8.3"
+  },
+  "devDependencies": {
+    "electron": "^41.0.4",
+    "electron-builder": "^26.8.1",
+    "png-to-ico": "^3.0.1"
+  },
+  "build": {
+    "appId": "de.mflex.elektrohub",
+    "productName": "ElektroHub",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "guide.html",
+      "qrforge.html",
+      "css/**/*",
+      "js/**/*",
+      "vendor/**/*",
+      "icon.png",
+      "icon.ico"
+    ],
+    "publish": {
+      "provider": "github",
+      "owner": "Nave-S",
+      "repo": "ElektroHub"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "icon.ico",
+      "legalTrademarks": "M-FLEX Energie und Gebäudetechnik"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "icon.ico",
+      "uninstallerIcon": "icon.ico",
+      "installerHeaderIcon": "icon.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "ElektroHub",
+      "artifactName": "ElektroHub-Setup-${version}.exe",
+      "installerLanguages": [
+        "de_DE"
+      ],
+      "language": "1031"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "icon.png",
+      "category": "public.app-category.business"
+    },
+    "portable": {
+      "artifactName": "ElektroHub-Portable-${version}.exe"
+    }
   }
 }

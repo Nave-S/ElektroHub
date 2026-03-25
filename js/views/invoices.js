@@ -256,6 +256,7 @@ const InvoicesView = {
           ${canCreateGutschrift ? `<button class="btn btn-secondary" onclick="InvoicesView.convertTo('${invoice.id}', 'gutschrift')">Gutschrift erstellen</button>` : ''}
           ${canCreateStorno ? `<button class="btn btn-secondary" onclick="InvoicesView.convertTo('${invoice.id}', 'stornorechnung')">Stornorechnung erstellen</button>` : ''}
           <button class="btn btn-primary" onclick="InvoicesView.exportPDF('${invoice.id}')">📄 PDF exportieren</button>
+          <button class="btn btn-secondary" onclick="InvoicesView.copyToExcel('${invoice.id}')" title="Positionen als Tabelle kopieren – in Excel einfügen mit Strg+V">📊 Excel</button>
           ${settings.agbPdf ? `<button class="btn btn-secondary" onclick="InvoicesView.downloadAgb()">📎 AGB herunterladen</button>` : ''}
           <button class="btn btn-secondary" onclick="InvoicesView.copyEmailText('${invoice.id}')">📧 E-Mail-Text kopieren</button>
           <button class="btn btn-secondary" onclick="InvoicesView.showForm('${invoice.id}')">✏️ Bearbeiten</button>
@@ -1518,6 +1519,86 @@ const InvoicesView = {
     await db.put(STORES.invoices, mahnung);
     showToast(`${dtLabel} ${mahnung.number} erstellt`);
     app.navigate('invoices', mahnung.id);
+  },
+
+  async copyToExcel(id) {
+    const invoice = await db.get(STORES.invoices, id);
+    if (!invoice) return;
+    const positions = invoice.positions || [];
+    const isKU = invoice.kleinunternehmer || false;
+    const dt = getDocType(invoice.type);
+
+    // Tab-getrennte Tabelle (Excel-kompatibel)
+    const TAB = '\t';
+    const lines = [];
+
+    // Kopfzeile: Beleg-Info
+    lines.push(`${dt.label} ${invoice.number}`);
+    lines.push(`Kunde: ${invoice.customerName || '–'}`);
+    lines.push(`Datum: ${invoice.date || '–'}`);
+    lines.push('');
+
+    // Spaltenüberschriften
+    lines.push(['Pos.', 'Beschreibung', 'Einheit', 'Menge', 'Einzelpreis', 'MwSt %', 'Rabatt %', 'Gesamt netto'].join(TAB));
+
+    // Positionen
+    positions.forEach((p, i) => {
+      lines.push([
+        i + 1,
+        (p.description || '').replace(/\t/g, ' '),
+        p.unit || 'Stück',
+        p.quantity || 0,
+        (p.unitPrice || 0).toFixed(2).replace('.', ','),
+        p.mwstRate != null ? p.mwstRate : 19,
+        p.discount || 0,
+        (p.total || 0).toFixed(2).replace('.', ','),
+      ].join(TAB));
+    });
+
+    lines.push('');
+
+    // Summen
+    lines.push(['', '', '', '', '', '', 'Netto:', (invoice.totalNet || 0).toFixed(2).replace('.', ',')].join(TAB));
+
+    if (!isKU) {
+      // MwSt gruppiert
+      const taxByRate = {};
+      positions.forEach(p => {
+        const rate = p.mwstRate != null ? p.mwstRate : 19;
+        taxByRate[rate] = M.add(taxByRate[rate] || 0, M.tax(p.total || 0, rate));
+      });
+      Object.entries(taxByRate).sort((a, b) => b[0] - a[0]).forEach(([rate, tax]) => {
+        lines.push(['', '', '', '', '', '', `MwSt ${rate}%:`, tax.toFixed(2).replace('.', ',')].join(TAB));
+      });
+    }
+
+    lines.push(['', '', '', '', '', '', isKU ? 'Gesamt:' : 'Brutto:', (invoice.totalGross || 0).toFixed(2).replace('.', ',')].join(TAB));
+
+    if (invoice.skontoEnabled && invoice.skontoRate > 0) {
+      const sk = M.skonto(invoice.totalGross, invoice.skontoRate);
+      lines.push(['', '', '', '', '', '', `Skonto ${invoice.skontoRate}%:`, '-' + sk.toFixed(2).replace('.', ',')].join(TAB));
+      lines.push(['', '', '', '', '', '', 'Nach Skonto:', M.sub(invoice.totalGross, sk).toFixed(2).replace('.', ',')].join(TAB));
+    }
+
+    if (isKU) {
+      lines.push('');
+      lines.push('Hinweis: Kleinunternehmer gem. §19 UStG – keine MwSt.');
+    }
+
+    // Prüfformel-Hinweis
+    lines.push('');
+    lines.push('Prüfung: Gesamt pro Zeile = Menge × Einzelpreis × (1 - Rabatt/100)');
+    lines.push('Netto = Summe aller Gesamt-Werte');
+    if (!isKU) lines.push('Brutto = Netto + Summe(Gesamt × MwSt% / 100) pro MwSt-Satz');
+
+    const text = lines.join('\n');
+
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast('In Zwischenablage kopiert – in Excel mit Strg+V einfügen');
+    } catch (e) {
+      openModal('Excel-Daten', `<textarea style="width:100%;height:400px;font-family:monospace;font-size:0.8rem;tab-size:16;" readonly>${escapeHtml(text)}</textarea><p class="text-small text-muted mt-8">Text markieren (Strg+A) und kopieren (Strg+C), dann in Excel einfügen.</p>`);
+    }
   },
 
   async copyEmailText(id) {
