@@ -699,13 +699,40 @@ const SettingsView = {
         </div>
       </div>
 
-      <!-- ========== 9. DATENSICHERUNG ========== -->
-      <div class="card setup-card">
+      <!-- ========== DATENPFAD (nur in Electron) ========== -->
+      ${window.electronAPI ? `
+      <div class="card setup-card" id="data-path-section">
         <div class="setup-header">
           <span class="setup-number">10</span>
           <div>
+            <h3>Datenpfad</h3>
+            <p class="text-muted text-small">Wo werden deine Daten gespeichert? Du kannst den Ordner z.B. auf eine externe Festplatte oder einen Netzwerk-Ordner legen.</p>
+          </div>
+        </div>
+        <div class="setup-body">
+          <div style="padding:16px;background:var(--gray-50);border-radius:8px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+              <strong>Aktueller Speicherort:</strong>
+            </div>
+            <code id="current-data-path" style="display:block;padding:10px 14px;background:var(--gray-200);border-radius:6px;font-size:0.85rem;word-break:break-all;">Wird geladen...</code>
+            <div class="btn-group mt-16">
+              <button class="btn btn-primary" onclick="SettingsView.changeDataPath()">Ordner wechseln</button>
+              <button class="btn btn-secondary" onclick="SettingsView.openDataFolder()">Ordner anzeigen</button>
+              <button class="btn btn-ghost" onclick="SettingsView.resetDataPath()">Auf Standard zuruecksetzen</button>
+            </div>
+            <p class="text-small text-muted mt-8">Beim Wechsel werden alle Daten in den neuen Ordner verschoben und die App startet neu.</p>
+          </div>
+        </div>
+      </div>
+      ` : ''}
+
+      <!-- ========== 9. DATENSICHERUNG ========== -->
+      <div class="card setup-card">
+        <div class="setup-header">
+          <span class="setup-number">${window.electronAPI ? '11' : '10'}</span>
+          <div>
             <h3>Datensicherung</h3>
-            <p class="text-muted text-small">Deine Daten sind sicher im Browser gespeichert. Mach trotzdem regelmäßig ein Backup!</p>
+            <p class="text-muted text-small">Deine Daten sind sicher ${window.electronAPI ? 'lokal auf deinem Computer' : 'im Browser'} gespeichert. Mach trotzdem regelmäßig ein Backup!</p>
           </div>
         </div>
         <div class="setup-body">
@@ -771,7 +798,7 @@ const SettingsView = {
       <!-- ========== 10. DEMO-DATEN ========== -->
       <div class="card setup-card" style="border:2px dashed var(--gray-300);">
         <div class="setup-header">
-          <span class="setup-number">11</span>
+          <span class="setup-number">${window.electronAPI ? '12' : '11'}</span>
           <div>
             <h3>Demo-Daten</h3>
             <p class="text-muted text-small">Beispieldaten zum Ausprobieren laden</p>
@@ -790,6 +817,9 @@ const SettingsView = {
   },
 
   async init() {
+    // Datenpfad laden (Electron)
+    this.loadDataPath();
+
     setTimeout(() => {
       // ── AGB Form ──
       const agbForm = document.getElementById('settings-agb-form');
@@ -1264,6 +1294,31 @@ const SettingsView = {
   },
 
   // ── Reset All Data ──
+  // ── Datenpfad (Electron) ──
+  async loadDataPath() {
+    if (!window.electronAPI) return;
+    const el = document.getElementById('current-data-path');
+    if (el) {
+      const p = await window.electronAPI.getDataPath();
+      el.textContent = p;
+    }
+  },
+
+  async changeDataPath() {
+    if (!window.electronAPI) return;
+    await window.electronAPI.changeDataPath();
+  },
+
+  async openDataFolder() {
+    if (!window.electronAPI) return;
+    await window.electronAPI.openDataFolder();
+  },
+
+  async resetDataPath() {
+    if (!window.electronAPI) return;
+    await window.electronAPI.resetDataPath();
+  },
+
   async resetData() {
     if (!confirm('ACHTUNG: Alle Daten werden unwiderruflich gelöscht!\n\nVorher ein Backup erstellen?')) return;
     if (!confirm('Wirklich ALLE Daten löschen?\n\nDas kann NICHT rückgängig gemacht werden!')) return;

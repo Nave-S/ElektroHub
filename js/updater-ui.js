@@ -7,6 +7,12 @@
 
   const BANNER_ID = 'update-banner';
 
+  function esc(str) {
+    const el = document.createElement('span');
+    el.textContent = str;
+    return el.innerHTML;
+  }
+
   function createBanner(html) {
     let banner = document.getElementById(BANNER_ID);
     if (!banner) {
@@ -31,12 +37,18 @@
     if (banner) banner.remove();
   }
 
+  const btnStyle = 'background:white;color:#1e40af;border:none;padding:6px 16px;border-radius:6px;font-weight:600;cursor:pointer;font-size:13px;';
+  const btnGhostStyle = 'background:transparent;color:rgba(255,255,255,0.8);border:1px solid rgba(255,255,255,0.4);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:13px;';
+
   // Update verfuegbar → Download laeuft automatisch
   window.electronAPI.onUpdateAvailable((info) => {
     createBanner(`
-      <span>Neue Version <strong>v${info.version}</strong> wird heruntergeladen...</span>
+      <span>Neue Version <strong>${esc(info.version)}</strong> wird heruntergeladen...</span>
       <span id="update-progress" style="opacity:0.8">0%</span>
+      <button id="btn-dismiss-dl" style="${btnGhostStyle}">Ausblenden</button>
     `);
+    const dismissBtn = document.getElementById('btn-dismiss-dl');
+    if (dismissBtn) dismissBtn.addEventListener('click', removeBanner);
   });
 
   // Download-Fortschritt
@@ -47,16 +59,10 @@
 
   // Download fertig → Installieren-Button anzeigen
   window.electronAPI.onUpdateDownloaded((info) => {
-    const banner = createBanner(`
-      <span>Version <strong>v${info.version}</strong> ist bereit!</span>
-      <button id="btn-install-update" style="
-        background: white; color: #1e40af; border: none; padding: 6px 16px;
-        border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px;
-      ">Jetzt installieren</button>
-      <button id="btn-dismiss-update" style="
-        background: transparent; color: rgba(255,255,255,0.8); border: 1px solid rgba(255,255,255,0.4);
-        padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px;
-      ">Spaeter</button>
+    createBanner(`
+      <span>Version <strong>${esc(info.version)}</strong> ist bereit!</span>
+      <button id="btn-install-update" style="${btnStyle}">Jetzt installieren</button>
+      <button id="btn-dismiss-update" style="${btnGhostStyle}">Spaeter</button>
     `);
 
     document.getElementById('btn-install-update').addEventListener('click', () => {
@@ -66,6 +72,15 @@
     document.getElementById('btn-dismiss-update').addEventListener('click', () => {
       removeBanner();
     });
+  });
+
+  // Update-Fehler
+  window.electronAPI.onUpdateError((msg) => {
+    createBanner(`
+      <span>Update-Fehler: ${esc(msg || 'Unbekannter Fehler')}</span>
+      <button id="btn-dismiss-error" style="${btnGhostStyle}">Schliessen</button>
+    `);
+    document.getElementById('btn-dismiss-error').addEventListener('click', removeBanner);
   });
 
   // Version in App-Info anzeigen
